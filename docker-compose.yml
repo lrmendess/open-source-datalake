@@ -1,0 +1,93 @@
+version: '3.9'
+
+services:
+
+  minio:
+    image: minio/minio:latest
+    container_name: datalake-minio
+    hostname: datalake-minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - datalake-minio-volume:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ADDRESS: :9000
+      MINIO_CONSOLE_ADDRESS: :9001
+    command:
+      - server
+      - /data
+    networks:
+      - datalake-network
+
+  hive-metastore-db:
+    image: postgres:11
+    container_name: datalake-hive-metastore-db
+    hostname: datalake-hive-metastore-db
+    ports:
+      - 5432:5432
+    volumes:
+      - datalake-hive-metastore-db-volume:/var/lib/postgresql/data
+    environment:    
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    restart: unless-stopped
+    networks:
+      - datalake-network
+
+  hive-metastore:
+    build: .
+    container_name: datalake-hive-metastore
+    hostname: datalake-hive-metastore
+    ports:
+      - 9083:9083
+    volumes:
+      - datalake-hive-metastore-volume:/opt/hive/data/warehouse
+    environment:
+      DB_DRIVER: postgres
+      SERVICE_NAME: metastore
+      HIVE_METASTORE_URI: thrift://datalake-hive-metastore:9083
+      HIVE_METASTORE_DB_URL: jdbc:postgresql://datalake-hive-metastore-db:5432/${POSTGRES_DB}
+      HIVE_METASTORE_DB_USER: ${POSTGRES_USER}
+      HIVE_METASTORE_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      S3_ENDPOINT: http://datalake-minio:9000
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    networks:
+      - datalake-network
+    depends_on:
+      - hive-metastore-db
+      - minio
+
+  trino:
+    image: trinodb/trino:426
+    container_name: datalake-trino
+    hostname: datalake-trino
+    ports:
+      - 8080:8080
+    volumes:
+      - ./config/trino/catalog:/etc/trino/catalog:ro
+    environment:
+      HIVE_METASTORE_URI: thrift://datalake-hive-metastore:9083
+      S3_ENDPOINT: http://datalake-minio:9000
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    networks:
+      - datalake-network
+    depends_on:
+      - hive-metastore
+
+volumes:
+  datalake-minio-volume:
+    driver: local
+  datalake-hive-metastore-db-volume:
+    driver: local
+  datalake-hive-metastore-volume:
+    driver: local
+
+networks:
+  datalake-network:
+    driver: bridge
