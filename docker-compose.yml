@@ -39,7 +39,7 @@ services:
       - datalake-network
 
   hive-metastore:
-    build: .
+    build: ./hive
     container_name: datalake-hive-metastore
     hostname: datalake-hive-metastore
     ports:
@@ -70,7 +70,7 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./config/trino/catalog:/etc/trino/catalog:ro
+      - ./trino/catalog:/etc/trino/catalog:ro
     environment:
       HIVE_METASTORE_URI: thrift://datalake-hive-metastore:9083
       S3_ENDPOINT: http://datalake-minio:9000
