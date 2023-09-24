@@ -58,6 +58,7 @@ services:
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
     networks:
       - datalake-network
+    restart: always
     depends_on:
       - hive-metastore-db
       - minio
