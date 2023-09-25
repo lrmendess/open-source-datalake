@@ -1,0 +1,13 @@
+trino:
+  outputs:
+    dev:
+      type: trino
+      method: none
+      user: dbt-user
+      password: ''
+      catalog: hive
+      host: "{{ env_var('TRINO_HOST') }}"
+      port: "{{ env_var('TRINO_PORT'), 8080) }}"
+      schema: sandbox
+      threads: 1
+  target: dev

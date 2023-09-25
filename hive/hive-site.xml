@@ -86,7 +86,7 @@
 
     <property>
         <name>javax.jdo.option.ConnectionDriverName</name>
-        <value>org.postgresql.Driver</value>
+        <value>${env.HIVE_METASTORE_DB_DRIVER}</value>
     </property>
     <property>
         <name>javax.jdo.option.ConnectionURL</name>

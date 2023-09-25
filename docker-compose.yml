@@ -1,7 +1,13 @@
 version: '3.9'
 
-services:
+x-hive-metastore-uri: &hive-metastore-uri thrift://datalake-hive-metastore:9083
 
+x-s3-auth: &s3-auth
+  S3_ENDPOINT: http://datalake-minio:9000
+  S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+  S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+
+services:
   minio:
     image: minio/minio:latest
     container_name: datalake-minio
@@ -47,15 +53,14 @@ services:
     volumes:
       - datalake-hive-metastore-volume:/opt/hive/data/warehouse
     environment:
+      <<: *s3-auth
       DB_DRIVER: postgres
       SERVICE_NAME: metastore
-      HIVE_METASTORE_URI: thrift://datalake-hive-metastore:9083
+      HIVE_METASTORE_URI: *hive-metastore-uri
+      HIVE_METASTORE_DB_DRIVER: org.postgresql.Driver
       HIVE_METASTORE_DB_URL: jdbc:postgresql://datalake-hive-metastore-db:5432/${POSTGRES_DB}
       HIVE_METASTORE_DB_USER: ${POSTGRES_USER}
       HIVE_METASTORE_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      S3_ENDPOINT: http://datalake-minio:9000
-      S3_ACCESS_KEY: ${MINIO_ROOT_USER}
-      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
     networks:
       - datalake-network
     restart: always
@@ -68,18 +73,52 @@ services:
     container_name: datalake-trino
     hostname: datalake-trino
     ports:
-      - 8080:8080
+      - 8081:8080
     volumes:
       - ./trino/catalog:/etc/trino/catalog:ro
     environment:
-      HIVE_METASTORE_URI: thrift://datalake-hive-metastore:9083
-      S3_ENDPOINT: http://datalake-minio:9000
-      S3_ACCESS_KEY: ${MINIO_ROOT_USER}
-      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      <<: *s3-auth
+      HIVE_METASTORE_URI: *hive-metastore-uri
     networks:
       - datalake-network
     depends_on:
       - hive-metastore
+
+  spark-master:
+    image: datalake-spark-image
+    build:
+      context: ./spark
+      args:
+        <<: *s3-auth
+        HIVE_METASTORE_URI: *hive-metastore-uri
+        SPARK_MASTER_URL: spark://datalake-spark-master:7077
+    container_name: datalake-spark-master
+    hostname: datalake-spark-master
+    environment: &spark-env
+      SPARK_MODE: master
+      SPARK_RPC_AUTHENTICATION_ENABLED: 'no'
+      SPARK_RPC_ENCRYPTION_ENABLED: 'no'
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: 'no'
+      SPARK_SSL_ENABLED: 'no'
+      SPARK_USER: spark
+    ports:
+      - 8082:8080
+    working_dir: /usr/app
+    networks:
+      - datalake-network
+
+  spark-worker:
+    image: datalake-spark-image
+    environment:
+      <<: *spark-env
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://datalake-spark-master:7077
+      SPARK_WORKER_MEMORY: 2G
+      SPARK_WORKER_CORES: 1
+    networks:
+      - datalake-network
+    depends_on:
+      - spark-master
 
 volumes:
   datalake-minio-volume:
