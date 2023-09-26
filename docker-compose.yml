@@ -7,8 +7,13 @@ x-s3-auth: &s3-auth
   S3_ACCESS_KEY: ${MINIO_ROOT_USER}
   S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
 
+x-commons: &commons
+  networks:
+    - datalake-network
+
 services:
   minio:
+    <<: *commons
     image: minio/minio:latest
     container_name: datalake-minio
     hostname: datalake-minio
@@ -25,10 +30,9 @@ services:
     command:
       - server
       - /data
-    networks:
-      - datalake-network
 
   hive-metastore-db:
+    <<: *commons
     image: postgres:11
     container_name: datalake-hive-metastore-db
     hostname: datalake-hive-metastore-db
@@ -41,10 +45,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     restart: unless-stopped
-    networks:
-      - datalake-network
 
   hive-metastore:
+    <<: *commons
     build: ./hive
     container_name: datalake-hive-metastore
     hostname: datalake-hive-metastore
@@ -61,14 +64,13 @@ services:
       HIVE_METASTORE_DB_URL: jdbc:postgresql://datalake-hive-metastore-db:5432/${POSTGRES_DB}
       HIVE_METASTORE_DB_USER: ${POSTGRES_USER}
       HIVE_METASTORE_DB_PASSWORD: ${POSTGRES_PASSWORD}
-    networks:
-      - datalake-network
     restart: always
     depends_on:
       - hive-metastore-db
       - minio
 
   trino:
+    <<: *commons
     image: trinodb/trino:426
     container_name: datalake-trino
     hostname: datalake-trino
@@ -79,12 +81,11 @@ services:
     environment:
       <<: *s3-auth
       HIVE_METASTORE_URI: *hive-metastore-uri
-    networks:
-      - datalake-network
     depends_on:
       - hive-metastore
 
   spark-master:
+    <<: *commons
     image: datalake-spark-image
     build:
       context: ./spark
@@ -103,11 +104,12 @@ services:
       SPARK_USER: spark
     ports:
       - 8082:8080
-    working_dir: /usr/app
-    networks:
-      - datalake-network
+      - 7077:7077
+      - 6066:6066
+      - 4040:4040
 
   spark-worker:
+    <<: *commons
     image: datalake-spark-image
     environment:
       <<: *spark-env
@@ -115,8 +117,6 @@ services:
       SPARK_MASTER_URL: spark://datalake-spark-master:7077
       SPARK_WORKER_MEMORY: 2G
       SPARK_WORKER_CORES: 1
-    networks:
-      - datalake-network
     depends_on:
       - spark-master
 
@@ -131,4 +131,4 @@ volumes:
 networks:
   datalake-network:
     name: datalake-network
-    driver: bridge
+    external: true

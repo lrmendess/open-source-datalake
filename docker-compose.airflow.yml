@@ -50,8 +50,8 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.7.1}
-  # build: .
+  # image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.7.1}
+  build: ./airflow
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -72,6 +72,9 @@ x-airflow-common:
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    S3_ENDPOINT: http://localhost:9000
+    S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+    S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
@@ -84,6 +87,10 @@ x-airflow-common:
       condition: service_healthy
     postgres:
       condition: service_healthy
+  networks:
+      - datalake-network
+  extra_hosts:
+    - host.docker.internal:host-gateway
 
 services:
   postgres:
@@ -100,6 +107,8 @@ services:
       retries: 5
       start_period: 5s
     restart: always
+    networks:
+      - datalake-network
 
   redis:
     image: redis:latest
@@ -112,6 +121,8 @@ services:
       retries: 50
       start_period: 30s
     restart: always
+    networks:
+      - datalake-network
 
   airflow-webserver:
     <<: *airflow-common
@@ -296,5 +307,24 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    environment:
+      CONTAINERS: 1
+      IMAGES: 1
+      AUTH: 1
+      POST: 1
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: always
+    networks:
+      - datalake-network
+
 volumes:
   postgres-db-volume:
+
+networks:
+  datalake-network:
+    name: datalake-network
+    external: true

@@ -4,3 +4,5 @@
 
 .env
 workspace/.samples/
+!workspace/logs/.gitkeep
+workspace/logs/
