@@ -13,7 +13,7 @@ def deploy_artifacts():
     ''' Upload spark artifacts to S3 '''
     filename = 'pyspark_birthdays_ingestion.py'
     filepath = os.path.join(AIRFLOW_HOME, 'dags', 'birthdays', filename)
-    s3_hook = S3Hook(aws_conn_id='s3conn')
+    s3_hook = S3Hook()
     s3_hook.load_file(filepath, filename, 'artifacts', replace=True)
 
 with DAG('dag.birthdays', start_date=datetime(2023, 9, 26), catchup=False) as dag:

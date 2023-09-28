@@ -72,9 +72,7 @@ x-airflow-common:
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
-    S3_ENDPOINT: http://localhost:9000
-    S3_ACCESS_KEY: ${MINIO_ROOT_USER}
-    S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    AIRFLOW_CONN_AWS_DEFAULT: '{"conn_type":"aws","login":"${MINIO_ROOT_USER}","password":"${MINIO_ROOT_PASSWORD}","extra":{"endpoint_url":"http://host.docker.internal:9000"}}'
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
