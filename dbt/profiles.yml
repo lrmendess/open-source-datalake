@@ -3,7 +3,7 @@ trino:
     dev:
       type: trino
       method: none
-      user: dbt-user
+      user: dbt
       password: ''
       catalog: hive
       host: "{{ env_var('TRINO_HOST') }}"
