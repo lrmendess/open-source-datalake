@@ -9,6 +9,18 @@ Try running the following commands:
 - Access the website presented in stdout
 
 
+### How to execute DBT Project
+```bash
+docker run \
+--network=datalake-network \
+--mount type=bind,source=dbt_project_path/,target=/usr/app \
+--mount type=bind,source=dbt_profile_path/profiles.yml,target=/root/.dbt/ \ # Optional
+dbt-trino run
+
+dbt run --project-dir /usr/app
+```
+
+
 ### Resources:
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
 - Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers

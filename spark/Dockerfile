@@ -1,3 +1,13 @@
+# Download spark dependencies using maven
+
+FROM maven:3.3-jdk-8 AS mvn-build
+
+WORKDIR /usr/src/spark/
+
+COPY ./pom.xml .
+
+RUN mvn clean dependency:copy-dependencies
+
 # Variable substitution over spark-defaults.conf
 
 FROM alpine:3.18.3 AS alpine-envsubst
@@ -29,6 +39,7 @@ USER root
 
 RUN touch ${SPARK_HOME}/conf/hadoop-metrics2-s3a-file-system.properties
 
+COPY --from=mvn-build /usr/src/spark/lib/* ${SPARK_HOME}/jars/
 COPY --from=alpine-envsubst /tmp/spark-defaults.conf ${SPARK_HOME}/conf/
 COPY --from=hive-jars /opt/hive/lib/* /opt/hive/lib/
 

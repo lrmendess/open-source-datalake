@@ -11,7 +11,7 @@ AIRFLOW_HOME = os.getenv('AIRFLOW_HOME')
 
 def deploy_artifacts():
     ''' Upload spark artifacts to S3 '''
-    filename = 'pyspark_birthdays_ingestion.py'
+    filename = 'pyspark_raw_tb_ipca_hist.py'
     filepath = os.path.join(AIRFLOW_HOME, 'dags', 'birthdays', filename)
     s3_hook = S3Hook()
     s3_hook.load_file(filepath, filename, 'artifacts', replace=True)
@@ -24,9 +24,7 @@ with DAG('dag.birthdays', start_date=datetime(2023, 9, 26), catchup=False) as da
 
     spark_submit_command = [
         'spark-submit',
-        '--master', 'spark://datalake-spark-master:7077',
-        '--deploy-mode', 'client',
-        's3a://artifacts/pyspark_birthdays_ingestion.py'
+        's3a://artifacts/pyspark_raw_tb_ipca_hist.py'
     ]
 
     spark_submit_task = DockerOperator(
