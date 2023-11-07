@@ -1,4 +1,7 @@
 **/.vscode
+**/.venv
+**/__pycache__
 
 .env
-storage/
+workspace/.samples/
+workspace/**/logs/
