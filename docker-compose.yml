@@ -62,6 +62,7 @@ services:
       HIVE_METASTORE_DB_URL: jdbc:postgresql://datalake-hive-metastore-db:5432/${POSTGRES_DB}
       HIVE_METASTORE_DB_USER: ${POSTGRES_USER}
       HIVE_METASTORE_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      IS_RESUME: ${IS_RESUME:-false}
     restart: always
     depends_on:
       - hive-metastore-db
