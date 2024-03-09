@@ -83,22 +83,34 @@ services:
       - hive-metastore-db
       - minio
 
-  trino:
+  trino-coordinator:
     <<: *commons
-    image: datalake-trino
-    build: ./trino
-    container_name: datalake-trino
-    hostname: datalake-trino
+    image: trinodb/trino:439
+    container_name: datalake-trino-coordinator
+    hostname: datalake-trino-coordinator
     ports:
       - 8081:8080
     volumes:
       - ./trino/catalog:/etc/trino/catalog:ro
+      - ./trino/coordinator/config.properties:/etc/trino/config.properties
     environment:
       <<: *s3-auth
       HIVE_METASTORE_URI: *hive-metastore-uri
     command: bash -c "/default-schemas.sh & /usr/lib/trino/bin/run-trino"
     depends_on:
       - hive-metastore
+
+  trino-worker:
+    <<: *commons
+    image: trinodb/trino:439
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog:ro
+      - ./trino/worker/config.properties:/etc/trino/config.properties
+    environment:
+      <<: *s3-auth
+      HIVE_METASTORE_URI: *hive-metastore-uri
+    depends_on:
+      - trino-coordinator
 
   spark-master:
     <<: *commons
