@@ -1,7 +1,9 @@
+.env
+
 **/.vscode
 **/.venv
 **/__pycache__
 
-.env
-workspace/.samples/
-workspace/**/logs/
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
