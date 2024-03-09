@@ -29,22 +29,6 @@ services:
       MINIO_CONSOLE_ADDRESS: :9001
     command: ["server", "/data"]
 
-  mc:
-    <<: *commons
-    image: minio/mc:latest
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set minio http://datalake-minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      /usr/bin/mc mb -p minio/landing;
-      /usr/bin/mc mb -p minio/raw;
-      /usr/bin/mc mb -p minio/trusted;
-      /usr/bin/mc mb -p minio/refined;
-      /usr/bin/mc mb -p minio/artifacts;
-      exit 0;
-      "
-    depends_on:
-      - minio
-
   hive-metastore-db:
     <<: *commons
     image: postgres:11
