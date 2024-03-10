@@ -81,7 +81,6 @@ services:
     environment:
       <<: *s3-auth
       HIVE_METASTORE_URI: *hive-metastore-uri
-    command: bash -c "/default-schemas.sh & /usr/lib/trino/bin/run-trino"
     depends_on:
       - hive-metastore
 

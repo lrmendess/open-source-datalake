@@ -180,7 +180,7 @@ services:
         fi
         mkdir -p /sources/{logs,dags,plugins,db}
         chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins,db}
-        ln -sfn /sources/db/ /opt/airflow/db
+        ln -sfn /sources/db /opt/airflow/db
         exec /entrypoint airflow version
     # yamllint enable rule:line-length
     environment:
@@ -193,19 +193,6 @@ services:
     user: "0:0"
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
-
-  airflow-cli:
-    <<: *airflow-common
-    profiles:
-      - debug
-    environment:
-      <<: *airflow-common-env
-      CONNECTION_CHECK_MAX_COUNT: "0"
-    # Workaround for entrypoint issue. See: https://github.com/apache/airflow/issues/16252
-    command:
-      - bash
-      - -c
-      - airflow
 
   docker-socket-proxy:
     image: tecnativa/docker-socket-proxy:latest
