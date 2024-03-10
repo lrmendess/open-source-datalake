@@ -4,9 +4,10 @@
 **/.venv
 **/__pycache__
 
-.terraform/
+.terraform
 .terraform.lock.hcl
 terraform.tfstate*
 
-workspace/db/
-workspace/logs/
+workspace/db
+!workspace/db/.gitkeep
+workspace/logs
