@@ -9,14 +9,16 @@ from airflow.operators.python import PythonOperator
 
 AIRFLOW_HOME = os.getenv('AIRFLOW_HOME')
 
+
 def deploy_artifacts():
     ''' Upload spark artifacts to S3 '''
-    filename = 'pyspark_raw_tb_ipca_hist.py'
-    filepath = os.path.join(AIRFLOW_HOME, 'dags', 'birthdays', filename)
     s3_hook = S3Hook()
-    s3_hook.load_file(filepath, filename, 'artifacts', replace=True)
+    filename = 'pyspark_raw_ipca_hist.py'
+    filepath = os.path.join(AIRFLOW_HOME, 'dags', 'dag_ipca_hist', filename)
+    s3_hook.load_file(filepath, filename, 'datalake-artifacts', replace=True)
 
-with DAG('dag.birthdays', start_date=datetime(2023, 9, 26), catchup=False) as dag:
+
+with DAG('dag.ipca', start_date=datetime(2024, 3, 11), catchup=False) as dag:
     deploy_artifacts_task = PythonOperator(
         task_id='deploy_artifacts',
         python_callable=deploy_artifacts
@@ -24,7 +26,7 @@ with DAG('dag.birthdays', start_date=datetime(2023, 9, 26), catchup=False) as da
 
     spark_submit_command = [
         'spark-submit',
-        's3a://artifacts/pyspark_raw_tb_ipca_hist.py'
+        's3a://datalake-artifacts/pyspark_raw_ipca_hist.py'
     ]
 
     spark_submit_task = DockerOperator(
@@ -38,4 +40,3 @@ with DAG('dag.birthdays', start_date=datetime(2023, 9, 26), catchup=False) as da
     )
 
     deploy_artifacts_task >> spark_submit_task
-    

@@ -9,13 +9,6 @@ terraform {
 
 locals {
   envs = { for tuple in regexall("(.*)=(.*)", file(".env")) : tuple[0] => sensitive(tuple[1]) }
-  
-  ipca_samples = toset([
-    "ipca2020.tsv",
-    "ipca2021.tsv",
-    "ipca2022.tsv",
-    "ipca2023.tsv",
-  ])
 }
 
 provider "minio" {
@@ -50,7 +43,7 @@ resource "minio_s3_bucket" "refined_bucket" {
 }
 
 resource "minio_s3_object" "upload_ipca_samples" {
-  for_each = local.ipca_samples
+  for_each = fileset("${path.module}/minio/samples/ipca", "*.tsv")
   depends_on = [minio_s3_bucket.landing_bucket]
   bucket_name = minio_s3_bucket.landing_bucket.bucket
   object_name = "ipca/${each.value}"
