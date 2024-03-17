@@ -77,6 +77,7 @@ x-airflow-common:
     AIRFLOW_VAR_BUCKET_RAW: ${BUCKET_RAW}
     AIRFLOW_VAR_BUCKET_TRUSTED: ${BUCKET_TRUSTED}
     AIRFLOW_VAR_BUCKET_REFINED: ${BUCKET_REFINED}
+    AIRFLOW_VAR_NETWORK_MODE: ${NETWORK_MODE}
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs

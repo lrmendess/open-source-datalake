@@ -42,6 +42,11 @@ resource "minio_s3_bucket" "refined_bucket" {
   acl    = "public"
 }
 
+resource "minio_s3_bucket" "spark_logs_bucket" {
+  bucket = local.envs["SPARK_LOGS_BUCKET"]
+  acl    = "public"
+}
+
 resource "minio_s3_object" "upload_ipca_samples" {
   for_each = fileset("${path.module}/minio/samples/ipca", "*.tsv")
   depends_on = [minio_s3_bucket.landing_bucket]

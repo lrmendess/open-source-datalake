@@ -105,6 +105,7 @@ services:
         <<: *s3-auth
         HIVE_METASTORE_URI: *hive-metastore-uri
         SPARK_MASTER_URL: spark://datalake-spark-master:7077
+        SPARK_LOGS_BUCKET: ${SPARK_LOGS_BUCKET}
     container_name: datalake-spark-master
     hostname: datalake-spark-master
     environment: &spark-env
@@ -127,6 +128,7 @@ services:
       <<: *spark-env
       SPARK_MODE: worker
       SPARK_MASTER_URL: spark://datalake-spark-master:7077
+      SPARK_LOGS_BUCKET: ${SPARK_LOGS_BUCKET}
       SPARK_WORKER_MEMORY: 2G
       SPARK_WORKER_CORES: 1
     depends_on:

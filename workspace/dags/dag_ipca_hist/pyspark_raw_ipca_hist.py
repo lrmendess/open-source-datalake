@@ -9,6 +9,7 @@ source: str = f's3a://{BUCKET_LANDING}/ipca/'
 
 spark: SparkSession = (
     SparkSession.builder
+    .appName('teste')
     .enableHiveSupport()
     .getOrCreate()
 )

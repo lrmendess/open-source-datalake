@@ -35,7 +35,7 @@ class UploadDisposableArtifactsOperator(BaseOperator):
             file_nodes = [f for f in nodes if f.is_file()]
             files.extend(file_nodes)
 
-        for file in files:
+        for file in set(files):
             relative_path = file.relative_to(self.root_dir)
             key = '/'.join((prefix, relative_path.as_posix()))
             s3_hook.load_file(file, key, bucket_artifacts, replace=True)

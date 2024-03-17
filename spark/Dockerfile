@@ -17,6 +17,7 @@ ARG HIVE_METASTORE_URI
 ARG S3_ENDPOINT
 ARG S3_ACCESS_KEY
 ARG S3_SECRET_KEY
+ARG SPARK_LOGS_BUCKET
 
 COPY ./spark-defaults.conf /tmp/spark-defaults.conf.template
 
@@ -26,6 +27,7 @@ RUN apk add gettext && \
     export S3_ENDPOINT=${S3_ENDPOINT} && \
     export S3_ACCESS_KEY=${S3_ACCESS_KEY} && \
     export S3_SECRET_KEY=${S3_SECRET_KEY} && \
+    export SPARK_LOGS_BUCKET=${SPARK_LOGS_BUCKET} && \
     envsubst < /tmp/spark-defaults.conf.template > /tmp/spark-defaults.conf
 
 # Get the Hive jar files

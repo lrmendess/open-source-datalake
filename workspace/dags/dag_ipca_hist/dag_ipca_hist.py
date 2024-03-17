@@ -17,11 +17,7 @@ docker_operator_kwargs = {
     'docker_url': 'TCP://docker-socket-proxy:2375',
     'network_mode': 'datalake-network',
     'environment': {
-        'BUCKET_ARTIFACTS': Variable.get('bucket_artifacts'),
-        'BUCKET_LANDING': Variable.get('bucket_landing'),
-        'BUCKET_RAW': Variable.get('bucket_raw'),
-        'BUCKET_TRUSTED': Variable.get('bucket_trusted'),
-        'BUCKET_REFINED': Variable.get('bucket_refined'),
+        'BUCKET_LANDING': Variable.get('bucket_landing')
     }
 }
 
@@ -35,13 +31,11 @@ docker_operator_kwargs = {
 def ipca_hist():
     upload_artifacts_task = UploadDisposableArtifactsOperator(
         task_id='upload_artifacts',
-        root_dir=DAG_DIR,
-        paths=[
-            'pyspark_raw_ipca_hist.py'
-        ]
+        paths=['pyspark_*_ipca_hist.py'],
+        root_dir=DAG_DIR
     )
 
-    s3_path: str = "{{ ti.xcom_pull(task_ids='upload_artifacts') }}"
+    artifacts_path = "{{ti.xcom_pull(task_ids='upload_artifacts')}}"
 
     spark_submit_command = [
         'spark-submit',
@@ -49,7 +43,7 @@ def ipca_hist():
         '--conf', 'spark.cores.max=1',
         '--conf', 'spark.executor.cores=1',
         '--conf', 'spark.executor.memory=1g',
-        f'{s3_path}/pyspark_raw_ipca_hist.py'
+        f'{artifacts_path}/pyspark_raw_ipca_hist.py'
     ]
 
     spark_submit_task = DockerOperator(
