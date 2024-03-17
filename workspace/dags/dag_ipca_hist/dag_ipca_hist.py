@@ -17,7 +17,7 @@ docker_operator_kwargs = {
     'docker_url': 'TCP://docker-socket-proxy:2375',
     'network_mode': 'datalake-network',
     'environment': {
-        'BUCKET_LANDING': Variable.get('bucket_landing')
+        'BUCKET_DATALAKE_LANDING': Variable.get('bucket_datalake_landing')
     }
 }
 

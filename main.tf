@@ -18,32 +18,32 @@ provider "minio" {
 }
 
 resource "minio_s3_bucket" "artifacts_bucket" {
-  bucket = local.envs["BUCKET_ARTIFACTS"]
+  bucket = local.envs["BUCKET_DATALAKE_ARTIFACTS"]
   acl    = "public"
 }
 
 resource "minio_s3_bucket" "landing_bucket" {
-  bucket = local.envs["BUCKET_LANDING"]
+  bucket = local.envs["BUCKET_DATALAKE_LANDING"]
   acl    = "public"
 }
 
 resource "minio_s3_bucket" "raw_bucket" {
-  bucket = local.envs["BUCKET_RAW"]
+  bucket = local.envs["BUCKET_DATALAKE_RAW"]
   acl    = "public"
 }
 
 resource "minio_s3_bucket" "trusted_bucket" {
-  bucket = local.envs["BUCKET_TRUSTED"]
+  bucket = local.envs["BUCKET_DATALAKE_TRUSTED"]
   acl    = "public"
 }
 
 resource "minio_s3_bucket" "refined_bucket" {
-  bucket = local.envs["BUCKET_REFINED"]
+  bucket = local.envs["BUCKET_DATALAKE_REFINED"]
   acl    = "public"
 }
 
 resource "minio_s3_bucket" "spark_logs_bucket" {
-  bucket = local.envs["SPARK_LOGS_BUCKET"]
+  bucket = local.envs["BUCKET_SPARK_LOGS"]
   acl    = "public"
 }
 

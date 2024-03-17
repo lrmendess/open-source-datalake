@@ -2,10 +2,10 @@ import os
 
 from pyspark.sql import SparkSession, DataFrame
 
-BUCKET_LANDING = os.getenv('BUCKET_LANDING')
+BUCKET_DATALAKE_LANDING = os.getenv('BUCKET_DATALAKE_LANDING')
 
 target: str = 'raw.tb_ipca_hist'
-source: str = f's3a://{BUCKET_LANDING}/ipca/'
+source: str = f's3a://{BUCKET_DATALAKE_LANDING}/ipca/'
 
 spark: SparkSession = (
     SparkSession.builder
