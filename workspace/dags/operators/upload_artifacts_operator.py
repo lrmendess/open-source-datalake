@@ -9,13 +9,13 @@ from airflow.models import Variable
 logger = logging.getLogger()
 
 
-class UploadDisposableArtifactsOperator(BaseOperator):
+class UploadArtifactsOperator(BaseOperator):
     def __init__(self, root_dir: str, paths: List[str] = None, **kwargs) -> None:
-        """ Uploads the artifact files to S3 at $bucket_datalake_artifacts.
+        """ Uploads the disposable artifact files to S3.
 
         Args:
             root (str, optional): Root directory. Defaults to None.
-            paths (List[str]): List of files or paths (using glob strategy).
+            paths (List[str]): List of paths (using glob strategy).
 
         Returns:
             str: Path to the root of files on S3.
