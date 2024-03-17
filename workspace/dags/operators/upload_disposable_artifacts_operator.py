@@ -4,13 +4,14 @@ from typing import List
 
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.models.baseoperator import BaseOperator
+from airflow.models import Variable
 
 logger = logging.getLogger()
 
 
 class UploadDisposableArtifactsOperator(BaseOperator):
-    def __init__(self, root: str, paths: List[str] = None, **kwargs) -> None:
-        """ Upload artifact files to $BUCKET_ARTIFACTS.
+    def __init__(self, root_dir: str, paths: List[str] = None, **kwargs) -> None:
+        """ Uploads the artifact files to S3 at $bucket_artifacts.
 
         Args:
             root (str, optional): Root directory. Defaults to None.
@@ -20,23 +21,24 @@ class UploadDisposableArtifactsOperator(BaseOperator):
             str: Path to the root of files on S3.
         """
         super().__init__(**kwargs)
-        self.root = root
+        self.root_dir = root_dir
         self.paths = paths or ["**/*"]
 
     def execute(self, context):
         s3_hook = S3Hook()
         files: List[Path] = []
         prefix = f"airflow/dag-run/{context['run_id']}"
+        bucket_artifacts = Variable.get('bucket_artifacts')
 
         for path in self.paths:
-            nodes = Path(self.root).glob(path)
+            nodes = Path(self.root_dir).glob(path)
             file_nodes = [f for f in nodes if f.is_file()]
             files.extend(file_nodes)
 
         for file in files:
-            relative_path = file.relative_to(self.root)
+            relative_path = file.relative_to(self.root_dir)
             key = '/'.join((prefix, relative_path.as_posix()))
-            s3_hook.load_file(file, key, BUCKET_ARTIFACTS, replace=True)
+            s3_hook.load_file(file, key, bucket_artifacts, replace=True)
             logger.info('File %s was loaded into S3', relative_path)
 
-        return f's3a://{BUCKET_ARTIFACTS}/{prefix}'
+        return f's3a://{bucket_artifacts}/{prefix}'

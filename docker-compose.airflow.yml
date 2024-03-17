@@ -71,6 +71,12 @@ x-airflow-common:
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # (Custom) S3 connector
     AIRFLOW_CONN_AWS_DEFAULT: '{"conn_type":"aws","login":"${MINIO_ROOT_USER}","password":"${MINIO_ROOT_PASSWORD}","extra":{"endpoint_url":"http://host.docker.internal:9000"}}'
+    # (Custom) S3 buckets
+    AIRFLOW_VAR_BUCKET_ARTIFACTS: ${BUCKET_ARTIFACTS}
+    AIRFLOW_VAR_BUCKET_LANDING: ${BUCKET_LANDING}
+    AIRFLOW_VAR_BUCKET_RAW: ${BUCKET_RAW}
+    AIRFLOW_VAR_BUCKET_TRUSTED: ${BUCKET_TRUSTED}
+    AIRFLOW_VAR_BUCKET_REFINED: ${BUCKET_REFINED}
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs

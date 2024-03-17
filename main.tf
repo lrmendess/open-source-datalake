@@ -18,27 +18,27 @@ provider "minio" {
 }
 
 resource "minio_s3_bucket" "artifacts_bucket" {
-  bucket = "datalake-artifacts"
+  bucket = local.envs["BUCKET_ARTIFACTS"]
   acl    = "public"
 }
 
 resource "minio_s3_bucket" "landing_bucket" {
-  bucket = "datalake-landing"
+  bucket = local.envs["BUCKET_LANDING"]
   acl    = "public"
 }
 
 resource "minio_s3_bucket" "raw_bucket" {
-  bucket = "datalake-raw"
+  bucket = local.envs["BUCKET_RAW"]
   acl    = "public"
 }
 
 resource "minio_s3_bucket" "trusted_bucket" {
-  bucket = "datalake-trusted"
+  bucket = local.envs["BUCKET_TRUSTED"]
   acl    = "public"
 }
 
 resource "minio_s3_bucket" "refined_bucket" {
-  bucket = "datalake-refined"
+  bucket = local.envs["BUCKET_REFINED"]
   acl    = "public"
 }
 
