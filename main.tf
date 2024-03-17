@@ -55,3 +55,11 @@ resource "minio_s3_object" "upload_ipca_samples" {
   content = file("minio/samples/ipca/${each.value}")
   content_type = "text/plain"
 }
+
+resource "minio_s3_object" "spark_logs_padding" {
+  depends_on = [minio_s3_bucket.spark_logs_bucket]
+  bucket_name = minio_s3_bucket.spark_logs_bucket.bucket
+  object_name = "logs/.keep"
+  content = "I shouldn't even exist"
+  content_type = "text/plain"
+}

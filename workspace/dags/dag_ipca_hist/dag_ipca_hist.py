@@ -39,7 +39,7 @@ def ipca_hist():
 
     spark_submit_command = [
         'spark-submit',
-        '--name', 'spark.raw.tb_ipca_hist',
+        '--name', 'raw_tb_ipca_hist',
         '--conf', 'spark.cores.max=1',
         '--conf', 'spark.executor.cores=1',
         '--conf', 'spark.executor.memory=1g',
