@@ -1,42 +1,65 @@
-''' Execute birthday data pipeline. '''
-import os
+import logging
 from datetime import datetime
+from pathlib import Path
 
-from airflow import DAG
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from airflow.operators.docker_operator import DockerOperator
-from airflow.operators.python import PythonOperator
+from airflow.decorators import dag
+from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.models import Variable
 
-AIRFLOW_HOME = os.getenv('AIRFLOW_HOME')
+from operators.upload_artifacts_operator import UploadArtifactsOperator
+
+DAG_DIR = Path(__file__).parent.absolute().as_posix()
+
+logger = logging.getLogger()
+
+docker_operator_kwargs = {
+    'api_version': 'auto',
+    'docker_url': Variable.get('docker_url'),
+    'network_mode': Variable.get('network_mode'),
+    'environment': {
+        'BUCKET_DATALAKE_LANDING': Variable.get('bucket_datalake_landing')
+    }
+}
 
 
-def deploy_artifacts():
-    ''' Upload spark artifacts to S3 '''
-    s3_hook = S3Hook()
-    filename = 'pyspark_raw_ipca_hist.py'
-    filepath = os.path.join(AIRFLOW_HOME, 'dags', 'dag_ipca_hist', filename)
-    s3_hook.load_file(filepath, filename, 'datalake-artifacts', replace=True)
-
-
-with DAG('dag.ipca', start_date=datetime(2024, 3, 11), catchup=False) as dag:
-    deploy_artifacts_task = PythonOperator(
-        task_id='deploy_artifacts',
-        python_callable=deploy_artifacts
+@dag(
+    dag_id='dag.ipca_hist',
+    start_date=datetime(2024, 1, 1),
+    schedule=None,
+    catchup=False
+)
+def ipca_hist():
+    upload_artifacts_task = UploadArtifactsOperator(
+        task_id='upload_artifacts',
+        paths=['pyspark_*_ipca_hist.py'],
+        root_dir=DAG_DIR
     )
 
-    spark_submit_command = [
-        'spark-submit',
-        's3a://datalake-artifacts/pyspark_raw_ipca_hist.py'
-    ]
+    artifacts_path = "{{ti.xcom_pull(task_ids='upload_artifacts')}}"
 
-    spark_submit_task = DockerOperator(
-        api_version='auto',
-        docker_url='TCP://docker-socket-proxy:2375',
-        command=spark_submit_command,
+    raw_tb_ipca_hist_task = DockerOperator(
+        task_id='raw_tb_ipca_hist',
         image='datalake-spark-image',
-        network_mode='datalake-network',
-        task_id='spark_submit_task',
-        dag=dag
+        **docker_operator_kwargs,
+        command=[
+            'spark-submit',
+            '--name', 'raw_tb_ipca_hist',
+            f'{artifacts_path}/pyspark_raw_ipca_hist.py'
+        ]
     )
 
-    deploy_artifacts_task >> spark_submit_task
+    trusted_tb_ipca_hist_task = DockerOperator(
+        task_id='trusted_tb_ipca_hist',
+        image='datalake-spark-image',
+        **docker_operator_kwargs,
+        command=[
+            'spark-submit',
+            '--name', 'trusted_tb_ipca_hist',
+            f'{artifacts_path}/pyspark_trusted_ipca_hist.py'
+        ]
+    )
+
+    upload_artifacts_task >> raw_tb_ipca_hist_task >> trusted_tb_ipca_hist_task
+
+
+ipca_hist()
