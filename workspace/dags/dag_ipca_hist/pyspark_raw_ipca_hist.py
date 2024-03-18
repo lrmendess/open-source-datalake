@@ -32,13 +32,12 @@ def load(df: DataFrame, target: str) -> None:
     )
 
 
-def handler(spark: SparkSession, source: str, target: str) -> None:
+def handle(spark: SparkSession, source: str, target: str) -> None:
     load(extract(spark, source), target)
 
 
 if __name__ == '__main__':
-    target = 'raw.tb_ipca_hist'
     source = f's3a://{BUCKET_DATALAKE_LANDING}/ipca/'
+    target = 'raw.tb_ipca_hist'
     spark = spark_session()
-
-    handler(spark, source, target)
+    handle(spark, source, target)
