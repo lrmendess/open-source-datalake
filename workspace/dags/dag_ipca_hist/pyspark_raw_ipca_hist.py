@@ -1,24 +1,44 @@
 import os
 
+from pyspark.sql.types import StructType
 from pyspark.sql import SparkSession, DataFrame
 
 BUCKET_DATALAKE_LANDING = os.getenv('BUCKET_DATALAKE_LANDING')
 
-target: str = 'raw.tb_ipca_hist'
-source: str = f's3a://{BUCKET_DATALAKE_LANDING}/ipca/'
 
-spark: SparkSession = (
-    SparkSession.builder
-    .enableHiveSupport()
-    .getOrCreate()
-)
+def spark_session() -> SparkSession:
+    return SparkSession.builder.enableHiveSupport().getOrCreate()
 
-df: DataFrame = spark.read.csv(source, sep='\t', header=True)
 
-(
-    df
-    .write
-    .format('parquet')
-    .mode('overwrite')
-    .saveAsTable(target)
-)
+def extract(spark: SparkSession, source: str) -> DataFrame:
+    schema = (
+        StructType()
+        .add('data', 'string')
+        .add('indice_mes', 'string')
+        .add('indice_acumulado_ano', 'string')
+        .add('indice_acumulado_12_meses', 'string')
+        .add('num_indice_acumulado_jan_1993', 'string')
+    )
+
+    return spark.read.csv(source, sep='\t', schema=schema, header=True)
+
+
+def load(df: DataFrame, target: str) -> None:
+    (
+        df
+        .write
+        .mode('overwrite')
+        .saveAsTable(target, format='parquet')
+    )
+
+
+def handler(spark: SparkSession, source: str, target: str) -> None:
+    load(extract(spark, source), target)
+
+
+if __name__ == '__main__':
+    target = 'raw.tb_ipca_hist'
+    source = f's3a://{BUCKET_DATALAKE_LANDING}/ipca/'
+    spark = spark_session()
+
+    handler(spark, source, target)

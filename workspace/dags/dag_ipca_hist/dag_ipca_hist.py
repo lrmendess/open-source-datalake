@@ -37,23 +37,29 @@ def ipca_hist():
 
     artifacts_path = "{{ti.xcom_pull(task_ids='upload_artifacts')}}"
 
-    spark_submit_command = [
-        'spark-submit',
-        '--name', 'raw_tb_ipca_hist',
-        '--conf', 'spark.cores.max=1',
-        '--conf', 'spark.executor.cores=1',
-        '--conf', 'spark.executor.memory=1g',
-        f'{artifacts_path}/pyspark_raw_ipca_hist.py'
-    ]
-
-    spark_submit_task = DockerOperator(
-        task_id='spark_submit',
+    raw_tb_ipca_hist_task = DockerOperator(
+        task_id='raw_tb_ipca_hist',
         image='datalake-spark-image',
-        command=spark_submit_command,
-        **docker_operator_kwargs
+        **docker_operator_kwargs,
+        command=[
+            'spark-submit',
+            '--name', 'raw_tb_ipca_hist',
+            f'{artifacts_path}/pyspark_raw_ipca_hist.py'
+        ]
     )
 
-    upload_artifacts_task >> spark_submit_task
+    trusted_tb_ipca_hist_task = DockerOperator(
+        task_id='trusted_tb_ipca_hist',
+        image='datalake-spark-image',
+        **docker_operator_kwargs,
+        command=[
+            'spark-submit',
+            '--name', 'trusted_tb_ipca_hist',
+            f'{artifacts_path}/pyspark_trusted_ipca_hist.py'
+        ]
+    )
+
+    upload_artifacts_task >> raw_tb_ipca_hist_task >> trusted_tb_ipca_hist_task
 
 
 ipca_hist()
