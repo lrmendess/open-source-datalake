@@ -18,7 +18,7 @@ class UploadArtifactsOperator(BaseOperator):
             paths (List[str]): List of paths (using glob strategy).
 
         Returns:
-            str: Path to the root of files on S3.
+            str: Path to the root of files on S3 (XCom).
         """
         super().__init__(**kwargs)
         self.root_dir = root_dir
