@@ -20,22 +20,20 @@ Feel free to study or replicate the content here.
 Below we have a step-by-step guide on how to perform the services available in the project.
 
 ### Environment variables
-
-Copy the `.env.default` file to `.env` and fill in the blank variables (in general, they are just credentials for some services).
+Copy the `.env.default` file to `.env` and fill in the blank variables.
 - POSTGRES_USER
 - POSTGRES_PASSWORD
 - MINIO_ROOT_USER
 - MINIO_ROOT_PASSWORD (requires a moderate password)
 
 ### Common services
-
 Create a network named datalake-network (only on first run).
 
 ```bash
 docker network create datalake-network
 ```
 
-Initialize all cluster services.
+Initialize all cluster services (This step may take a while to complete on the first run).
 
 ``` bash
 docker compose up -d [--scale trino-worker=<num>] [--scale spark-worker=<num>]
@@ -53,12 +51,26 @@ terraform apply -auto-approve
 
 Create HMS schemas (only on first run).
 ``` bash
-docker container exec datalake-trino-coordinator --execute "$(cat trino/schemas.sql | xargs)"
+docker container exec datalake-trino-coordinator trino --execute "$(cat trino/schemas.sql)"
 ```
 
 ### Airflow (optional)
+First you need to run the database migrations and create a user account, to do this just run the command below:
+
 ``` bash
 docker compose -f docker-compose.airflow.yml up airflow-init
-# Wait until airflow-init finishes running (it is only necessary on the first run)
+```
+
+If you want to customize the Airflow project directory, simply update the `AIRFLOW_PROJ_DIR` variable in the `.env` to a directory of interest.
+
+> The default directory is `./workspace`
+
+Once airflow-init is finished, we can actually run Apache Airflow.
+
+``` bash
 docker compose -f docker-compose.airflow.yml up -d
 ```
+
+Access the URL [https://localhost:8080](https://localhost:8080) in your browser and log in using `airflow` as username and `airflow` as password (basically the default user).
+
+For more details, see the official [Airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html).
