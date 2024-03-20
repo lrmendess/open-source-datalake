@@ -1,0 +1,65 @@
+
+version: 2
+
+models:
+  - name: ipca_movimentacoes
+    description: "Informações mensais do IPCA desde 2020, com apontamento dos meses que tiveram movimentos de inflação ou deflação"
+    columns:
+      - name: num_ano
+        description: "Número do ano referente ao IPCA"
+        tests:
+          - not_null
+
+      - name: num_mes
+        description: "Número do mês referente ao IPCA"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 12
+              inclusive: true
+
+      - name: num_indice_acum_jan_93
+        description: "Valor de referência reajustado pela inflação"
+        tests:
+          - not_null
+
+      - name: pct_mes
+        description: "Percentual de inflação/deflação do mês"
+        tests:
+          - not_null
+
+      - name: pct_acum_ano
+        description: "Percentual acumulado do ano"
+        tests:
+          - not_null
+
+      - name: pct_acum_12m
+        description: "Percentual acumulado dos últimos 12 meses"
+        tests:
+          - not_null
+
+      - name: cls_movimento
+        description: "Classe do movimento de inflação ou deflação no mês"
+        tests:
+          - accepted_values:
+              values: ["Inflação", "Deflação"]
+              quote: true
+
+  - name: ipca_movimentacoes_ano
+    description: "Agrupamento das informações do IPCA por ano e contagem dos meses com inflação ou deflação"
+    columns:
+      - name: num_ano
+        description: "Número do ano referente ao IPCA"
+        tests:
+          - not_null
+      - name: cls_movimento
+        description: "Classe do movimento de inflação ou deflação no ano"
+        tests:
+          - accepted_values:
+              values: ["Inflação", "Deflação"]
+              quote: true
+      - name: num_frequencia
+        description: "Número de ocorrências de inflação ou deflação no ano"
+        tests:
+          - not_null
