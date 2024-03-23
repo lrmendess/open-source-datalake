@@ -1,3 +1,4 @@
+import re
 import logging
 from pathlib import Path
 from typing import List, Sequence
@@ -10,35 +11,44 @@ logger = logging.getLogger()
 
 
 class UploadArtifactsOperator(BaseOperator):
-    template_fields: Sequence[str] = ('root_dir',)
+    template_fields: Sequence[str] = ('root_dir', 'paths',)
 
-    def __init__(self, root_dir: str, paths: List[str] = None, **kwargs) -> None:
+    def __init__(self, root_dir: str = '/', paths: List[str] = None, **kwargs) -> None:
         """ Uploads the disposable artifact files to S3.
 
         Args:
-            root (str, optional): Root directory. Defaults to None.
-            paths (List[str]): List of paths (using glob strategy).
+            root (str, optional): Absolute path to the root directory. Defaults to '/'.
+            paths (List[str], optional): Relative paths (glob). Defaults to None.
 
         Returns:
             str: Path to the root of files on S3 (XCom).
         """
         super().__init__(**kwargs)
-        self.root_dir = root_dir
-        self.paths = paths or ["**/*"]
+        self.root_dir = str(root_dir)
+        self.paths = paths or ['**/*']
 
-    def format_run_id(self, run_id: str):
-        replaces = [':', '-', '+', '.']
-        for r in replaces:
-            run_id = run_id.replace(r, '_')
-        return run_id
+    def validate(self):
+        if len(self.root_dir) <= 0 or self.root_dir == '.' or '..' in self.root_dir:
+            raise Exception(f'Non-relative pattern are not supported by "root_dir" variable.\n'
+                            f'Current value: {self.root_dir}')
+
+        if self.root_dir == '/' and '**/*' in self.paths:
+            raise Exception('The path /**/* is not allowed.')
+
+        if any(path.startswith('/') for path in self.paths):
+            raise Exception('Non-relative patterns are not supported by the "paths" variable '
+                            'unless the prefix is the same as "root_dir".')
 
     def execute(self, context):
+        self.validate()
+
         s3_hook = S3Hook()
         files: List[Path] = []
-        prefix = f"airflow/dag-run/{self.format_run_id(context['run_id'])}"
-        bucket = Variable.get('bucket_datalake_artifacts')
+        bucket: str = Variable.get('bucket_datalake_artifacts')
+        context_id = re.sub(r'[^\d\w]', '_', context['run_id'])
+        prefix = f'airflow/dag-run/{context_id}'
 
-        logging.info('Listing files in directory %s', self.root_dir)
+        logging.info('Listing files in directory "%s"', self.root_dir)
 
         for path in self.paths:
             nodes = Path(self.root_dir).glob(path)
