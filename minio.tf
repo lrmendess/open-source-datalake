@@ -56,6 +56,24 @@ resource "minio_s3_object" "upload_ipca_samples" {
   content_type = "text/plain"
 }
 
+resource "minio_s3_object" "upload_cesta_basica_samples" {
+  for_each = fileset("${path.module}/minio/samples/preco-cesta-basica", "*.csv")
+  depends_on = [minio_s3_bucket.landing_bucket]
+  bucket_name = minio_s3_bucket.landing_bucket.bucket
+  object_name = "preco-cesta-basica/${each.value}"
+  content = file("minio/samples/preco-cesta-basica/${each.value}")
+  content_type = "text/plain"
+}
+
+resource "minio_s3_object" "upload_salario_minimo_samples" {
+  for_each = fileset("${path.module}/minio/samples/salario-minimo", "*.csv")
+  depends_on = [minio_s3_bucket.landing_bucket]
+  bucket_name = minio_s3_bucket.landing_bucket.bucket
+  object_name = "salario-minimo/${each.value}"
+  content = file("minio/samples/salario-minimo/${each.value}")
+  content_type = "text/plain"
+}
+
 resource "minio_s3_object" "spark_logs_padding" {
   depends_on = [minio_s3_bucket.spark_logs_bucket]
   bucket_name = minio_s3_bucket.spark_logs_bucket.bucket

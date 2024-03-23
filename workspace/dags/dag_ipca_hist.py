@@ -5,22 +5,13 @@ from pathlib import Path
 
 from airflow.decorators import dag
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.models import Variable
 
 from operators.upload_artifacts_operator import UploadArtifactsOperator
+from commons.docker_operator import docker_operator_kwargs
 
 SRC_DIR = Path(os.getenv('AIRFLOW_HOME'), 'src', 'ipca_hist')
 
 logger = logging.getLogger()
-
-docker_operator_kwargs = {
-    'api_version': 'auto',
-    'docker_url': Variable.get('docker_url'),
-    'network_mode': Variable.get('network_mode'),
-    'environment': {
-        'BUCKET_DATALAKE_LANDING': Variable.get('bucket_datalake_landing')
-    }
-}
 
 
 @dag(
@@ -32,7 +23,6 @@ docker_operator_kwargs = {
 def ipca_hist():
     upload_artifacts_task = UploadArtifactsOperator(
         task_id='upload_artifacts',
-        paths=['pyspark_*_ipca_hist.py'],
         root_dir=SRC_DIR
     )
 
