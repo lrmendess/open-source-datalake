@@ -1,5 +1,4 @@
 import os
-import subprocess
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -24,18 +23,29 @@ logger = logging.getLogger()
     catchup=False
 )
 def preco_cesta_basica():
-    zip_dependencies = BashOperator(
-        task_id='pip_install',
-        bash_command=f"""
-            tempdir=$(mktemp -d) && \\
-            mkdir -p $tempdir/pyfiles && \\
-            mkdir -p {SRC_DIR}/pyfiles && \\
-            pip install -r {SRC_DIR}/requirements.txt -t $tempdir/pyfiles && \\
-            cd $tempdir/pyfiles && \\
-            zip -r pyfiles.zip * && \\
-            cp pyfiles.zip {SRC_DIR}
-        """
-    )
+    with TaskGroup('build_requirements') as build_requirements:
+        pip_install = BashOperator(
+            task_id='pip_install',
+            bash_command=f"""
+                tempdir=$(mktemp -d) && \\
+                mkdir -p $tempdir/pyfiles && \\
+                pip install -r {SRC_DIR}/requirements.txt -t $tempdir/pyfiles && \\
+                cd $tempdir/pyfiles && \\
+                zip -r pyfiles.zip * && \\
+                echo $tempdir/pyfiles
+            """,
+            do_xcom_push=True
+        )
+
+        pyfiles_root_dir = "{{ti.xcom_pull(task_ids='build_requirements.pip_install')}}"
+
+        upload_zip = UploadArtifactsOperator(
+            task_id='upload_zip',
+            paths=['pyfiles.zip'],
+            root_dir=pyfiles_root_dir
+        )
+
+        pip_install >> upload_zip
 
     upload_artifacts_task = UploadArtifactsOperator(
         task_id='upload_artifacts',
@@ -62,11 +72,13 @@ def preco_cesta_basica():
         command=[
             'spark-submit',
             '--name', 'trusted_tb_preco_cesta_basica',
+            '--py-files', f'{artifacts_path}/pyfiles.zip',
             f'{artifacts_path}/pyspark_trusted_preco_cesta_basica.py'
         ]
     )
 
-    zip_dependencies >> upload_artifacts_task >> raw_tb_preco_cesta_basica >> trusted_tb_preco_cesta_basica
+    build_requirements >> upload_artifacts_task >> raw_tb_preco_cesta_basica
+    raw_tb_preco_cesta_basica >> trusted_tb_preco_cesta_basica
 
 
 preco_cesta_basica()
