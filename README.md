@@ -12,7 +12,6 @@ Feel free to study or replicate the content here.
 - MinIO
 - Trino
 - Apache Spark
-- dbt Core
 - Terraform
 - Airflow
 
@@ -74,3 +73,11 @@ docker compose -f docker-compose.airflow.yml up -d
 Access the URL [https://localhost:8080](https://localhost:8080) in your browser and log in using `airflow` as username and `airflow` as password (basically the default user).
 
 For more details, see the official [Airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html).
+
+### Access links to service interfaces
+|Service|URL|Auth|
+|---|---|---|
+|Airflow|http://localhost:8080|airflow:airflow|
+|Trino UI|http://localhost:8081|Any username, no password is required|
+|Spark UI|http://localhost:8082|None|
+|MinIO|http://localhost:9001|`${MINIO_ROOT_USER}`:`${MINIO_ROOT_PASSWORD}`|
