@@ -5,11 +5,11 @@ from pathlib import Path
 
 from airflow.decorators import dag
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.operators.bash import BashOperator
 from airflow.utils.task_group import TaskGroup
-
-from operators.upload_artifacts_operator import UploadArtifactsOperator
 from commons.docker_operator import docker_operator_kwargs
+from operators.upload_artifacts_operator import (UploadArtifactsOperator,
+                                                 UploadSingleArtifactOperator)
+from operators.zip_pyfiles_operator import ZipPyfilesOperator
 
 SRC_DIR = Path(os.getenv('AIRFLOW_HOME'), 'src', 'preco_cesta_basica')
 
@@ -23,36 +23,25 @@ logger = logging.getLogger()
     catchup=False
 )
 def preco_cesta_basica():
-    with TaskGroup('build_requirements') as build_requirements:
-        pip_install = BashOperator(
-            task_id='pip_install',
-            bash_command=f"""
-                tempdir=$(mktemp -d) && \\
-                mkdir -p $tempdir/pyfiles && \\
-                pip install -r {SRC_DIR}/requirements.txt -t $tempdir/pyfiles && \\
-                cd $tempdir/pyfiles && \\
-                zip -r pyfiles.zip * && \\
-                echo $tempdir/pyfiles
-            """,
-            do_xcom_push=True
+    with TaskGroup('upload_artifacts') as upload_artifacts:
+        pyfiles_zip_task = ZipPyfilesOperator(
+            task_id='pyfiles_zip',
+            pip_requirements=f'{SRC_DIR}/requirements.txt'
         )
 
-        pyfiles_root_dir = "{{ti.xcom_pull(task_ids='build_requirements.pip_install')}}"
-
-        upload_zip = UploadArtifactsOperator(
-            task_id='upload_zip',
-            paths=['pyfiles.zip'],
-            root_dir=pyfiles_root_dir
+        upload_pyfiles_task = UploadSingleArtifactOperator(
+            task_id='upload_pyfiles',
+            path="{{ti.xcom_pull(task_ids='upload_artifacts.pyfiles_zip')}}",
         )
 
-        pip_install >> upload_zip
+        upload_src_task = UploadArtifactsOperator(
+            task_id='upload_src',
+            root_dir=SRC_DIR
+        )
 
-    upload_artifacts_task = UploadArtifactsOperator(
-        task_id='upload_artifacts',
-        root_dir=SRC_DIR
-    )
+        pyfiles_zip_task >> upload_pyfiles_task >> upload_src_task
 
-    artifacts_path = "{{ti.xcom_pull(task_ids='upload_artifacts')}}"
+    src_path = "{{ti.xcom_pull(task_ids='upload_artifacts.upload_src')}}"
 
     raw_tb_preco_cesta_basica = DockerOperator(
         task_id='raw_tb_preco_cesta_basica',
@@ -61,7 +50,7 @@ def preco_cesta_basica():
         command=[
             'spark-submit',
             '--name', 'raw_tb_preco_cesta_basica',
-            f'{artifacts_path}/pyspark_raw_preco_cesta_basica.py'
+            f'{src_path}/pyspark_raw_preco_cesta_basica.py'
         ]
     )
 
@@ -72,13 +61,12 @@ def preco_cesta_basica():
         command=[
             'spark-submit',
             '--name', 'trusted_tb_preco_cesta_basica',
-            '--py-files', f'{artifacts_path}/pyfiles.zip',
-            f'{artifacts_path}/pyspark_trusted_preco_cesta_basica.py'
+            '--py-files', "{{ti.xcom_pull(task_ids='upload_artifacts.upload_pyfiles')}}",
+            f'{src_path}/pyspark_trusted_preco_cesta_basica.py'
         ]
     )
 
-    build_requirements >> upload_artifacts_task >> raw_tb_preco_cesta_basica
-    raw_tb_preco_cesta_basica >> trusted_tb_preco_cesta_basica
+    upload_artifacts >> raw_tb_preco_cesta_basica >> trusted_tb_preco_cesta_basica
 
 
 preco_cesta_basica()
