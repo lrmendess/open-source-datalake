@@ -8,7 +8,7 @@ logger = logging.getLogger()
 class ZipPyfilesOperator(BashOperator):
     template_fields = ('pip_requirements',)
 
-    def __init__(self, pip_requirements: str, name: str = 'pyfiles.zip', **kwargs):     
+    def __init__(self, pip_requirements: str, name: str = 'pyfiles.zip', **kwargs):
         """ Installs pip dependencies from a requirements.txt file and creates a zip file of them.
 
         Args:
