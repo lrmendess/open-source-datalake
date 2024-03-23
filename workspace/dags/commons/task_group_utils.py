@@ -1,5 +1,5 @@
 import os
-from typing import Iterator, Tuple
+from typing import Tuple
 
 from airflow.models.baseoperator import chain
 from airflow.utils.task_group import TaskGroup

@@ -79,7 +79,12 @@ class UploadSingleArtifactOperator(UploadArtifactsOperator):
 
     def execute(self, context):
         path = Path(self.path)
-        self.root_dir = path.parent.as_posix()
+
+        if not path.is_file():
+            raise Exception('The path must reference a file.')
+
         self.paths = [path.name,]
+        self.root_dir = path.parent.as_posix()
         s3_location = super().execute(context)
+
         return '/'.join((s3_location, path.name))
