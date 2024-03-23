@@ -1,3 +1,4 @@
+import os
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -8,7 +9,7 @@ from airflow.models import Variable
 
 from operators.upload_artifacts_operator import UploadArtifactsOperator
 
-DAG_DIR = Path(__file__).parent.absolute().as_posix()
+SRC_DIR = Path(os.getenv('AIRFLOW_HOME'), 'src', 'ipca_hist')
 
 logger = logging.getLogger()
 
@@ -32,7 +33,7 @@ def ipca_hist():
     upload_artifacts_task = UploadArtifactsOperator(
         task_id='upload_artifacts',
         paths=['pyspark_*_ipca_hist.py'],
-        root_dir=DAG_DIR
+        root_dir=SRC_DIR
     )
 
     artifacts_path = "{{ti.xcom_pull(task_ids='upload_artifacts')}}"

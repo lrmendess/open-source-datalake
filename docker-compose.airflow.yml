@@ -85,6 +85,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/db:/opt/airflow/db
+    - ${AIRFLOW_PROJ_DIR:-.}/src:/opt/airflow/src
   user: "${AIRFLOW_UID:-50000}:0"
   # (Custom) Network config
   networks:
