@@ -6,10 +6,10 @@ BUCKET_DATALAKE_LANDING = os.getenv('BUCKET_DATALAKE_LANDING')
 
 spark: SparkSession = SparkSession.builder.enableHiveSupport().getOrCreate()
 
-source = f's3a://{BUCKET_DATALAKE_LANDING}/ipca/'
-target = 'raw.tb_ipca_hist'
+source = f's3a://{BUCKET_DATALAKE_LANDING}/preco-cesta-basica/'
+target = 'raw.tb_preco_cesta_basica'
 
-df: DataFrame = spark.read.csv(source, sep='\t', header=True)
+df: DataFrame = spark.read.csv(source, sep=';', header=True)
 
 (
     df
