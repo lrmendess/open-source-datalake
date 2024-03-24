@@ -40,18 +40,17 @@ class UploadArtifactsOperator(BaseOperator):
     def execute(self, context):
         self.validate()
 
-        s3_hook = S3Hook()
         files: List[Path] = []
-        bucket: str = Variable.get('bucket_datalake_artifacts')
-        context_id = re.sub(r'[^\d\w]', '_', context['run_id'])
-        prefix = f'airflow/dag-run/{context_id}'
-
-        logging.info('Listing files in directory "%s"', self.root_dir)
 
         for path in self.paths:
             nodes = Path(self.root_dir).glob(path)
             file_nodes = [f for f in nodes if f.is_file()]
             files.extend(file_nodes)
+
+        s3_hook = S3Hook()
+        bucket: str = Variable.get('bucket_datalake_artifacts')
+        context_id = re.sub(r'[^\d\w]', '_', context['run_id'])
+        prefix = f'airflow/dag-run/{context_id}'
 
         for file in set(files):
             relative_path = file.relative_to(self.root_dir)
