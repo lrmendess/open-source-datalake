@@ -2,8 +2,9 @@ import re
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
-
 from slugify import slugify
+
+from spark_transformations.string_format import string_to_double
 
 
 def spark_session() -> SparkSession:
@@ -21,8 +22,7 @@ def sanitize_columns(df: DataFrame) -> DataFrame:
         renamed = str(col)
         if match := regex.match(col):
             renamed = match.group(1)
-        renamed = slugify(renamed, separator='_')
-        df = df.withColumnRenamed(col, renamed)
+        df = df.withColumnRenamed(col, slugify(renamed, separator='_'))
 
     return df
 
@@ -37,21 +37,12 @@ def remove_invalid_rows(df: DataFrame) -> DataFrame:
     return df.na.drop(how='any', subset=['nu_mes', 'nu_ano'])
 
 
-def convert_br_str_to_double(df: DataFrame) -> DataFrame:
-    for col in ['salario_minimo']:
-        df = df.withColumn(col, F.regexp_replace(col, r'\.', ''))
-        df = df.withColumn(col, F.regexp_replace(col, r',', '.'))
-        df = df.withColumn(col, F.col(col).cast('double'))
-
-    return df
-
-
 def transform(df: DataFrame) -> DataFrame:
     df = (df
           .transform(sanitize_columns)
           .transform(extract_date_and_year)
           .transform(remove_invalid_rows)
-          .transform(convert_br_str_to_double)
+          .transform(string_to_double, '.', ',', 'salario_minimo')
           .withColumnRenamed('salario_minimo', 'vl_salario_minimo')
           .drop('data'))
 

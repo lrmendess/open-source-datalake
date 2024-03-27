@@ -5,6 +5,8 @@ import pyspark.sql.functions as F
 from pyspark.sql.window import Window as W
 from pyspark.sql import DataFrame, SparkSession
 
+from spark_transformations.string_format import string_to_double
+
 UF_MARKER = 'UF_'
 
 
@@ -40,17 +42,6 @@ def extract_date_and_year(df: DataFrame) -> DataFrame:
 
 def remove_invalid_rows(df: DataFrame) -> DataFrame:
     return df.na.drop(how='any', subset=['nu_mes', 'nu_ano'])
-
-
-def convert_br_str_to_double(df: DataFrame) -> DataFrame:
-    cols = get_columns_with_uf_marker(df)
-
-    for col in cols:
-        df = df.withColumn(col, F.regexp_replace(col, r'\.', ''))
-        df = df.withColumn(col, F.regexp_replace(col, r',', '.'))
-        df = df.withColumn(col, F.col(col).cast('double'))
-
-    return df
 
 
 def unpivot_uf_columns(df: DataFrame) -> DataFrame:
@@ -90,11 +81,13 @@ def fill_null_with_surrounding_avg(df: DataFrame) -> DataFrame:
 
 
 def transform(df: DataFrame) -> DataFrame:
+    uf_cols = get_columns_with_uf_marker(df)
+
     df = (df
           .transform(sanitize_columns)
           .transform(extract_date_and_year)
           .transform(remove_invalid_rows)
-          .transform(convert_br_str_to_double)
+          .transform(string_to_double, '.', ',', *uf_cols)
           .transform(unpivot_uf_columns)
           .transform(remove_uf_marker)
           .transform(fill_null_with_surrounding_avg))

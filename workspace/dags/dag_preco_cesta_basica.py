@@ -1,15 +1,14 @@
-import os
 import logging
 from datetime import datetime
-from pathlib import Path
 
 from airflow.decorators import dag
 from airflow.providers.docker.operators.docker import DockerOperator
 
+from commons.workspace_utils import get_jobs_dir
 from commons.docker_operator_utils import docker_operator_spark_kwargs
 from commons.task_group_utils import task_group_upload_spark_artifacts
 
-SRC_DIR = Path(os.getenv('AIRFLOW_HOME'), 'src', 'preco_cesta_basica')
+JOB_DIR = get_jobs_dir('preco_cesta_basica')
 
 logger = logging.getLogger()
 
@@ -23,7 +22,7 @@ logger = logging.getLogger()
 def preco_cesta_basica():
     artifacts_task, src, pyfiles = task_group_upload_spark_artifacts(
         group_id='upload_artifacts',
-        src_path=SRC_DIR
+        job_dir=JOB_DIR
     )
 
     raw_task = DockerOperator(
