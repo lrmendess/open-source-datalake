@@ -47,15 +47,6 @@ resource "minio_s3_bucket" "spark_logs_bucket" {
   acl    = "public"
 }
 
-resource "minio_s3_object" "upload_ipca_samples" {
-  for_each = fileset("${path.module}/minio/samples/ipca", "*.tsv")
-  depends_on = [minio_s3_bucket.landing_bucket]
-  bucket_name = minio_s3_bucket.landing_bucket.bucket
-  object_name = "ipca/${each.value}"
-  content = file("minio/samples/ipca/${each.value}")
-  content_type = "text/plain"
-}
-
 resource "minio_s3_object" "upload_cesta_basica_samples" {
   for_each = fileset("${path.module}/minio/samples/preco-cesta-basica", "*.csv")
   depends_on = [minio_s3_bucket.landing_bucket]
