@@ -1,11 +1,10 @@
 import re
-from typing import List
 
 import pyspark.sql.functions as F
-from pyspark.sql.window import Window as W
 from pyspark.sql import DataFrame, SparkSession
 
 from spark_transformations.string_format import string_to_double
+from spark_transformations.null_values import fill_null_with_surrounding_avg
 
 UF_MARKER = 'UF_'
 
@@ -18,19 +17,13 @@ def extract(spark: SparkSession, source: str) -> DataFrame:
     return spark.read.table(source)
 
 
-def get_columns_with_uf_marker(df: DataFrame) -> List[str]:
-    return [col for col in df.columns if col.startswith(UF_MARKER)]
-
-
 def sanitize_columns(df: DataFrame) -> DataFrame:
     regex = re.compile(r'\d+\s-\s.*\s-\s(.*)\s-\s+.*')
-
     for col in df.columns:
         renamed = str(col)
         if match := regex.match(col):
             renamed = UF_MARKER + match.group(1)
         df = df.withColumnRenamed(col, renamed)
-
     return df
 
 
@@ -40,57 +33,31 @@ def extract_date_and_year(df: DataFrame) -> DataFrame:
     return df
 
 
-def remove_invalid_rows(df: DataFrame) -> DataFrame:
-    return df.na.drop(how='any', subset=['nu_mes', 'nu_ano'])
-
-
 def unpivot_uf_columns(df: DataFrame) -> DataFrame:
-    cols = get_columns_with_uf_marker(df)
-
-    df = df.unpivot(
-        ids=['nu_mes', 'nu_ano'],
-        values=cols,
-        variableColumnName='nm_uf',
-        valueColumnName='vl_cesta_basica'
-    )
-
+    ids = ['nu_mes', 'nu_ano']
+    cols = [col for col in df.columns if col.startswith(UF_MARKER)]
+    df = df.unpivot(ids, cols, 'nm_uf', 'vl_cesta_basica')
     return df.orderBy('nu_ano', 'nu_mes')
 
 
-def remove_uf_marker(df: DataFrame) -> DataFrame:
-    col_substr = F.substr('nm_uf', F.lit(len(UF_MARKER) + 1))
-    return df.withColumn('nm_uf', col_substr)
-
-
-def fill_null_with_surrounding_avg(df: DataFrame) -> DataFrame:
-    w1 = W.partitionBy('nm_uf') \
-          .orderBy('nu_ano', 'nu_mes') \
-          .rowsBetween(W.unboundedPreceding, W.currentRow)
-
-    w2 = W.partitionBy('nm_uf') \
-          .orderBy('nu_ano', 'nu_mes') \
-          .rowsBetween(W.currentRow, W.unboundedFollowing)
-
-    avg_col = (F.coalesce('prev', 'next') + F.coalesce('next', 'prev')) / 2
-    df = df.withColumn('prev', F.last('vl_cesta_basica', ignorenulls=True).over(w1))
-    df = df.withColumn('next', F.first('vl_cesta_basica', ignorenulls=True).over(w2))
-    df = df.withColumn('vl_cesta_basica', avg_col)
-    df = df.drop('prev', 'next')
-
-    return df
-
-
 def transform(df: DataFrame) -> DataFrame:
-    uf_cols = get_columns_with_uf_marker(df)
-
     df = (df
           .transform(sanitize_columns)
-          .transform(extract_date_and_year)
-          .transform(remove_invalid_rows)
-          .transform(string_to_double, '.', ',', *uf_cols)
+          .transform(extract_date_and_year))
+
+    df = df.na.drop(how='any', subset=['nu_mes', 'nu_ano'])
+
+    df = (df
           .transform(unpivot_uf_columns)
-          .transform(remove_uf_marker)
-          .transform(fill_null_with_surrounding_avg))
+          .transform(string_to_double, '.', ',', 'vl_cesta_basica')
+          .withColumn('nm_uf', F.regexp_replace('nm_uf', UF_MARKER, '')))
+
+    df = df.transform(
+        func=fill_null_with_surrounding_avg,
+        col='vl_cesta_basica',
+        partitions=['nm_uf'],
+        order_by=['nu_ano', 'nu_mes']
+    )
 
     return df
 
@@ -101,7 +68,7 @@ def load(df: DataFrame, target: str) -> None:
         .write
         .mode('overwrite')
         .format('parquet')
-        .partitionBy('nu_ano', 'nu_mes', 'nm_uf')
+        .partitionBy('nm_uf', 'nu_ano')
         .saveAsTable(target)
     )
 

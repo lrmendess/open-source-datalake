@@ -17,13 +17,11 @@ def extract(spark: SparkSession, source: str) -> DataFrame:
 
 def sanitize_columns(df: DataFrame) -> DataFrame:
     regex = re.compile(r'\d+\s-\s(.*)\s-\s+.*')
-
     for col in df.columns:
         renamed = str(col)
         if match := regex.match(col):
             renamed = match.group(1)
         df = df.withColumnRenamed(col, slugify(renamed, separator='_'))
-
     return df
 
 
@@ -33,17 +31,15 @@ def extract_date_and_year(df: DataFrame) -> DataFrame:
     return df
 
 
-def remove_invalid_rows(df: DataFrame) -> DataFrame:
-    return df.na.drop(how='any', subset=['nu_mes', 'nu_ano'])
-
-
 def transform(df: DataFrame) -> DataFrame:
     df = (df
           .transform(sanitize_columns)
           .transform(extract_date_and_year)
-          .transform(remove_invalid_rows)
           .transform(string_to_double, '.', ',', 'salario_minimo')
-          .withColumnRenamed('salario_minimo', 'vl_salario_minimo')
+          .withColumnRenamed('salario_minimo', 'vl_salario_minimo'))
+
+    df = (df.na
+          .drop(how='any', subset=['nu_mes', 'nu_ano'])
           .drop('data'))
 
     return df
@@ -55,7 +51,7 @@ def load(df: DataFrame, target: str) -> None:
         .write
         .mode('overwrite')
         .format('parquet')
-        .partitionBy('nu_ano', 'nu_mes')
+        .partitionBy('nu_ano')
         .saveAsTable(target)
     )
 
