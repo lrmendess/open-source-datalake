@@ -42,6 +42,11 @@ def transform(df: DataFrame) -> DataFrame:
           .drop(how='any', subset=['nu_mes', 'nu_ano'])
           .drop('data'))
 
+    # Início do Plano Real
+    df = (df
+          .where(F.col('nu_ano') >= 1994)
+          .where(F.when((F.col('nu_ano') == 1994) & (F.col('nu_mes') < 7), False).otherwise(True)))
+
     return df
 
 
@@ -61,7 +66,7 @@ def handle(spark: SparkSession, source: str, target: str) -> None:
 
 
 if __name__ == '__main__':
+    spark = spark_session()
     source = 'raw.tb_salario_minimo'
     target = 'trusted.tb_salario_minimo'
-    spark = spark_session()
     handle(spark, source, target)

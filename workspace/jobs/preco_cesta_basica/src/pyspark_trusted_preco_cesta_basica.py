@@ -78,7 +78,7 @@ def handle(spark: SparkSession, source: str, target: str) -> None:
 
 
 if __name__ == '__main__':
+    spark = spark_session()
     source = 'raw.tb_preco_cesta_basica'
     target = 'trusted.tb_preco_cesta_basica'
-    spark = spark_session()
     handle(spark, source, target)

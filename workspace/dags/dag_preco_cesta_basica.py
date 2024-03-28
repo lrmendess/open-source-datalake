@@ -3,6 +3,8 @@ from datetime import datetime
 
 from airflow.decorators import dag
 from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.operators.empty import EmptyOperator
+from airflow.datasets import Dataset
 
 from commons.workspace_utils import get_jobs_dir
 from commons.docker_operator_utils import docker_operator_spark_kwargs
@@ -46,7 +48,12 @@ def preco_cesta_basica():
         ]
     )
 
-    artifacts_task >> raw_task >> trusted_task
+    end_task = EmptyOperator(
+        task_id='end_task',
+        outlets=[Dataset('dag.preco_cesta_basica')]
+    )
+
+    artifacts_task >> raw_task >> trusted_task >> end_task
 
 
 preco_cesta_basica()
