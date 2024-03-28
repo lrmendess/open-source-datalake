@@ -1,52 +1,52 @@
-import os
 import logging
 from datetime import datetime
-from pathlib import Path
 
 from airflow.decorators import dag
 from airflow.providers.docker.operators.docker import DockerOperator
 
+from commons.workspace_utils import get_jobs_dir
 from commons.docker_operator_utils import docker_operator_spark_kwargs
 from commons.task_group_utils import task_group_upload_spark_artifacts
 
-SRC_DIR = Path(os.getenv('AIRFLOW_HOME'), 'src', 'ipca_hist')
+JOB_DIR = get_jobs_dir('salario_minimo')
 
 logger = logging.getLogger()
 
 
 @dag(
-    dag_id='dag.ipca_hist',
+    dag_id='dag.salario_minimo',
     start_date=datetime(2024, 1, 1),
     schedule=None,
     catchup=False
 )
-def ipca_hist():
+def salario_minimo():
     artifacts_task, src, pyfiles = task_group_upload_spark_artifacts(
         group_id='upload_artifacts',
-        src_path=SRC_DIR
+        job_dir=JOB_DIR
     )
 
     raw_task = DockerOperator(
-        task_id='raw_tb_ipca_hist',
         **docker_operator_spark_kwargs,
+        task_id='raw_tb_salario_minimo',
         command=[
             'spark-submit',
-            '--name', 'raw_tb_ipca_hist',
-            f'{src}/pyspark_raw_ipca_hist.py'
+            '--name', 'raw_tb_salario_minimo',
+            f'{src}/pyspark_raw_salario_minimo.py'
         ]
     )
 
     trusted_task = DockerOperator(
-        task_id='trusted_tb_ipca_hist',
         **docker_operator_spark_kwargs,
+        task_id='trusted_tb_salario_minimo',
         command=[
             'spark-submit',
-            '--name', 'trusted_tb_ipca_hist',
-            f'{src}/pyspark_trusted_ipca_hist.py'
+            '--name', 'trusted_tb_salario_minimo',
+            '--py-files', pyfiles,
+            f'{src}/pyspark_trusted_salario_minimo.py'
         ]
     )
 
     artifacts_task >> raw_task >> trusted_task
 
 
-ipca_hist()
+salario_minimo()

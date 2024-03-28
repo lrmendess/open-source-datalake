@@ -1,4 +1,7 @@
+import os
 import logging
+
+from typing import Sequence
 
 from airflow.operators.bash import BashOperator
 
@@ -6,7 +9,7 @@ logger = logging.getLogger()
 
 
 class ZipPyfilesOperator(BashOperator):
-    template_fields = ('pip_requirements',)
+    template_fields: Sequence[str] = ('pip_requirements',)
 
     def __init__(self, pip_requirements: str, name: str = 'pyfiles.zip', **kwargs):
         """ Installs pip dependencies from a requirements.txt file and creates a zip file of them.

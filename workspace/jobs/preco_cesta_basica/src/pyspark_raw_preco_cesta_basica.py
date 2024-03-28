@@ -15,5 +15,6 @@ df: DataFrame = spark.read.csv(source, sep=';', header=True)
     df
     .write
     .mode('overwrite')
-    .saveAsTable(target, format='parquet')
+    .format('parquet')
+    .saveAsTable(target)
 )

@@ -9,13 +9,15 @@ from operators.upload_artifacts_operator import (UploadArtifactsOperator,
 from operators.zip_pyfiles_operator import ZipPyfilesOperator
 
 
-def task_group_upload_spark_artifacts(
-    group_id: str,
-    src_path: str
-) -> Tuple[TaskGroup, str, str]:
+def task_group_upload_spark_artifacts(group_id: str, job_dir: str) -> Tuple[TaskGroup, str, str]:
+    """ Default Task Group for uploading spark files and their dependencies.
+
+    Returns:
+        Tuple[TaskGroup, str, str]: Task Group reference, pyspark src path and pyfiles zip path.
+    """
     with TaskGroup(group_id) as group:
         tasks = []
-        requirements = f'{src_path}/requirements.txt'
+        requirements = f'{job_dir}/requirements.txt'
 
         if os.path.exists(requirements):
             pyfiles_zip_task = ZipPyfilesOperator(
@@ -34,7 +36,7 @@ def task_group_upload_spark_artifacts(
 
         upload_src_task = UploadArtifactsOperator(
             task_id='upload_src',
-            root_dir=src_path
+            root_dir=f'{job_dir}/src'
         )
 
         tasks.append(upload_src_task)
