@@ -3,6 +3,7 @@ from datetime import datetime
 
 from airflow.decorators import dag
 from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.datasets import Dataset
 
 from commons.workspace_utils import get_jobs_dir
 from commons.docker_operator_utils import docker_operator_spark_kwargs
@@ -16,7 +17,7 @@ logger = logging.getLogger()
 @dag(
     dag_id='dag.poder_compra',
     start_date=datetime(2024, 1, 1),
-    schedule=None,
+    schedule=[Dataset('dag.salario_minimo'), Dataset('dag.preco_cesta_basica')],
     catchup=False
 )
 def poder_compra():
