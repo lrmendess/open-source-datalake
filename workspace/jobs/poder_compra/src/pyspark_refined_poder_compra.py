@@ -21,8 +21,9 @@ def transform(dfs: dict[str, DataFrame]) -> DataFrame:
     df_preco_cesta_basica = dfs['preco_cesta_basica']
 
     df = df_salario_minimo.join(df_preco_cesta_basica, how='inner', on=['nu_ano', 'nu_mes'])
+    df = df.withColumn('dt_data', F.last_day(F.concat_ws('-', 'nu_ano', 'nu_mes', F.lit(1))))
     col_poder_compra = F.format_number(F.col('vl_salario_minimo') / F.col('vl_cesta_basica'), 2)
-    df = df.withColumn('vl_poder_compra', col_poder_compra)
+    df = df.withColumn('vl_poder_compra', col_poder_compra.cast('double'))
 
     return df
 

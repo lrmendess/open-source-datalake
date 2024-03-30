@@ -6,8 +6,10 @@
 
 .terraform
 .terraform.lock.hcl
-terraform.tfstate*
+terraform.tfstate
+terraform.tfstate.backup
 
 workspace/db
-!workspace/db/.gitkeep
 workspace/logs
+
+metabase/metabase.db/metabase.db.trace.db
