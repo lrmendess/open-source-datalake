@@ -21,7 +21,7 @@ class UploadArtifactsOperator(BaseOperator):
             paths (List[str], optional): Relative paths (glob compatible). Defaults to None.
 
         Returns:
-            str: Path to artifacts directory on s3.
+            str: Path to artifacts prefix on s3.
         """
         self.root_dir = str(root_dir)
         self.paths = paths or ['**/*']
@@ -47,12 +47,12 @@ class UploadArtifactsOperator(BaseOperator):
             file_nodes = [f for f in nodes if f.is_file()]
             files.extend(file_nodes)
 
-        s3_hook = S3Hook()
         bucket: str = Variable.get('bucket_datalake_artifacts')
         context_id = re.sub(r'[^\d\w]', '_', context['run_id'])
         prefix = f'airflow/dag-run/{context_id}'
 
         for file in set(files):
+            s3_hook = S3Hook()  # prevent boto3 MissingHeaderBodySeparatorDefect error
             relative_path = file.relative_to(self.root_dir)
             key = '/'.join((prefix, relative_path.as_posix()))
             s3_hook.load_file(file, key, bucket, replace=True)
@@ -71,7 +71,7 @@ class UploadSingleArtifactOperator(UploadArtifactsOperator):
             paths (str): Absolute path to artifact file.
 
         Returns:
-            str: Path to artifacts directory on s3.
+            str: Path to artifact file on s3.
         """
         self.path = path
         super().__init__(**kwargs)

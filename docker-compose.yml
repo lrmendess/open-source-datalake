@@ -98,7 +98,7 @@ services:
 
   spark-master:
     <<: *commons
-    image: datalake-spark-image
+    image: ${SPARK_IMAGE}
     build:
       context: ./spark
       args:
@@ -123,7 +123,7 @@ services:
 
   spark-worker:
     <<: *commons
-    image: datalake-spark-image
+    image: ${SPARK_IMAGE}
     environment:
       <<: *spark-env
       SPARK_MODE: worker

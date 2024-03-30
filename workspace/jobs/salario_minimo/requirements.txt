@@ -1,2 +1,0 @@
-python-slugify==8.0.4
-${AIRFLOW_HOME}/jobs/shared

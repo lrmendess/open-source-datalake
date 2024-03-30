@@ -79,13 +79,14 @@ x-airflow-common:
     AIRFLOW_VAR_BUCKET_DATALAKE_REFINED: ${BUCKET_DATALAKE_REFINED}
     AIRFLOW_VAR_NETWORK_MODE: ${NETWORK_MODE}
     AIRFLOW_VAR_DOCKER_URL: ${DOCKER_URL}
+    AIRFLOW_VAR_SPARK_IMAGE: ${SPARK_IMAGE}
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/db:/opt/airflow/db
-    - ${AIRFLOW_PROJ_DIR:-.}/jobs:/opt/airflow/jobs
+    - ${AIRFLOW_PROJ_DIR:-.}/project:/opt/airflow/project
   user: "${AIRFLOW_UID:-50000}:0"
   # (Custom) Network config
   networks:
