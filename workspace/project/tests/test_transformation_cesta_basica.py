@@ -1,20 +1,19 @@
-import sys
+from typing import Iterator
 
 import pytest
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, IntegerType, DoubleType, StringType
+from pyspark.sql.types import (DoubleType, IntegerType, StringType,
+                               StructField, StructType)
 from pyspark.testing import assertDataFrameEqual
-
-sys.path.append('../')
 
 
 @pytest.fixture
-def spark_session() -> SparkSession:
-    return SparkSession.builder.enableHiveSupport().getOrCreate()
+def spark_session() -> Iterator[SparkSession]:
+    yield SparkSession.builder.enableHiveSupport().getOrCreate()
 
 
 def test_transformation_cesta_basica(spark_session: SparkSession) -> None:
-    from src.pyspark_trusted_preco_cesta_basica import transform
+    from src.preco_cesta_basica.pyspark_trusted_preco_cesta_basica import transform
 
     input_df = spark_session.createDataFrame(
         data=[('01/1998', '95,17 '),
@@ -35,14 +34,8 @@ def test_transformation_cesta_basica(spark_session: SparkSession) -> None:
         ])
     )
 
-    print(expected_df.schema)
-    print(expected_df.show())
-
     # Act
     transformed_df = transform(input_df)
-
-    print(transformed_df.schema)
-    print(transformed_df.show())
 
     # Assert
     assertDataFrameEqual(transformed_df, expected_df)
