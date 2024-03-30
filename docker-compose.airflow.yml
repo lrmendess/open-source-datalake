@@ -219,5 +219,5 @@ services:
 
 networks:
   datalake-network:
-    name: datalake-network
+    name: ${NETWORK_MODE}
     external: true

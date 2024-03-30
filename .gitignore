@@ -12,4 +12,4 @@ terraform.tfstate.backup
 workspace/db
 workspace/logs
 
-metabase/metabase.db/metabase.db.trace.db
+metabase/metabase.db
