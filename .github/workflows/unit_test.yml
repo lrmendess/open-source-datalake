@@ -1,4 +1,4 @@
-name: Docker Build and Test
+name: Python Unit Test
 
 on:
   push:
@@ -7,9 +7,11 @@ on:
     branches: ["main", "develop"]
 
 jobs:
-  test:
+  unit_test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
+
       - name: Build image and execute pytest
         run: sh workspace/project/test.sh
