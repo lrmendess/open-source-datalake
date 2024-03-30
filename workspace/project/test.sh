@@ -11,6 +11,6 @@ rmi() {
 trap rmi EXIT
 
 docker build --tag $DOCKER_IMAGE $PROJECT_DIR
-docker run -it --rm $DOCKER_IMAGE python -m pytest tests
+docker run -t --rm $DOCKER_IMAGE python -m pytest tests
 
 exit_code=$?

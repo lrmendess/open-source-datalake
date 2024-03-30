@@ -11,6 +11,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Build Docker image and execute pytest
+      - name: Build image and execute pytest
         run: sh workspace/project/test.sh
