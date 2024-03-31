@@ -29,22 +29,6 @@ services:
       MINIO_CONSOLE_ADDRESS: :9001
     command: ["server", "/data"]
 
-  mc:
-    <<: *commons
-    image: minio/mc:latest
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set minio http://datalake-minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      /usr/bin/mc mb -p minio/landing;
-      /usr/bin/mc mb -p minio/raw;
-      /usr/bin/mc mb -p minio/trusted;
-      /usr/bin/mc mb -p minio/refined;
-      /usr/bin/mc mb -p minio/artifacts;
-      exit 0;
-      "
-    depends_on:
-      - minio
-
   hive-metastore-db:
     <<: *commons
     image: postgres:11
@@ -78,37 +62,50 @@ services:
       HIVE_METASTORE_DB_URL: jdbc:postgresql://datalake-hive-metastore-db:5432/${POSTGRES_DB}
       HIVE_METASTORE_DB_USER: ${POSTGRES_USER}
       HIVE_METASTORE_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      IS_RESUME: ${IS_RESUME:-false}
     restart: always
     depends_on:
       - hive-metastore-db
       - minio
 
-  trino:
+  trino-coordinator:
     <<: *commons
-    image: datalake-trino
-    build: ./trino
-    container_name: datalake-trino
-    hostname: datalake-trino
+    image: trinodb/trino:439
+    container_name: datalake-trino-coordinator
+    hostname: datalake-trino-coordinator
     ports:
       - 8081:8080
     volumes:
       - ./trino/catalog:/etc/trino/catalog:ro
+      - ./trino/coordinator/config.properties:/etc/trino/config.properties
     environment:
       <<: *s3-auth
       HIVE_METASTORE_URI: *hive-metastore-uri
-    command: bash -c "/default-schemas.sh & /usr/lib/trino/bin/run-trino"
     depends_on:
       - hive-metastore
 
+  trino-worker:
+    <<: *commons
+    image: trinodb/trino:439
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog:ro
+      - ./trino/worker/config.properties:/etc/trino/config.properties
+    environment:
+      <<: *s3-auth
+      HIVE_METASTORE_URI: *hive-metastore-uri
+    depends_on:
+      - trino-coordinator
+
   spark-master:
     <<: *commons
-    image: datalake-spark-image
+    image: ${SPARK_IMAGE}
     build:
       context: ./spark
       args:
         <<: *s3-auth
         HIVE_METASTORE_URI: *hive-metastore-uri
         SPARK_MASTER_URL: spark://datalake-spark-master:7077
+        BUCKET_SPARK_LOGS: ${BUCKET_SPARK_LOGS}
     container_name: datalake-spark-master
     hostname: datalake-spark-master
     environment: &spark-env
@@ -126,11 +123,12 @@ services:
 
   spark-worker:
     <<: *commons
-    image: datalake-spark-image
+    image: ${SPARK_IMAGE}
     environment:
       <<: *spark-env
       SPARK_MODE: worker
       SPARK_MASTER_URL: spark://datalake-spark-master:7077
+      BUCKET_SPARK_LOGS: ${BUCKET_SPARK_LOGS}
       SPARK_WORKER_MEMORY: 2G
       SPARK_WORKER_CORES: 1
     depends_on:
@@ -146,5 +144,5 @@ volumes:
 
 networks:
   datalake-network:
-    name: datalake-network
+    name: ${NETWORK_MODE}
     external: true
