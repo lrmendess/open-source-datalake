@@ -1,4 +1,4 @@
-# open-source-datalake
+# Open Source Data Lake
 ![Actions Result](https://github.com/lrmendess/open-source-datalake/actions/workflows/default-actions.yml/badge.svg)
 
 This project consists of a learning initiative in creating a Big Data cluster using open source tools.
@@ -6,17 +6,18 @@ This project consists of a learning initiative in creating a Big Data cluster us
 Feel free to study or replicate the content here.
 
 ## Prerequisites (tested)
+- Docker >= 25.0.4
 - Docker Compose >= 2.24.7
 - OpenTofu >= 1.6.2
 
 ## Available services
-- Hive Metastore (HMS)
-- MinIO
-- Trino
-- Apache Spark
-- OpenTofu
 - Airflow
+- Apache Spark
+- Hive Metastore (HMS)
 - Metabase
+- MinIO
+- OpenTofu
+- Trino
 
 ## Project Architecture
 Below we have an illustration of the project architecture, presenting the available services and their interactions.
@@ -46,7 +47,7 @@ Initialize all cluster services (This step may take a while to complete on the f
 docker compose up -d [--scale trino-worker=<num>] [--scale spark-worker=<num>]
 ```
 
-> After the first startup, if you stop the service and want to start it again, you must prefix the variable `IS_RESUME=true` when invoking the `docker-compose up` command again.
+> After the first startup, if you stop the service and want to start it again, you must prefix the variable `IS_RESUME=true` when invoking the `docker-compose up` command again. This will prevent HMS from trying to recreate your database.
 
 Create MinIO Buckets (only on first run).
 
@@ -56,7 +57,7 @@ tofu plan
 tofu apply -auto-approve
 ```
 
-Create HMS schemas (only on first run).
+Create Data Lake schemas (only on first run).
 ``` bash
 docker container exec datalake-trino-coordinator trino --execute "$(cat trino/schemas.sql)"
 ```
@@ -109,3 +110,11 @@ For more details, see the official [Metabase documentation](https://www.metabase
 |Trino UI|http://localhost:8081|Any username, no password is required|
 |Spark UI|http://localhost:8082|None|
 |MinIO|http://localhost:9001|`${MINIO_ROOT_USER}`:`${MINIO_ROOT_PASSWORD}`|
+
+
+## Proof of Concept
+In the `workspace/project` directory, we have a project that serves as a demonstration of how the Cluster and Data Lake works. It consists of a simple data pipeline for ingestion, curation and refinement, demonstrating the interaction between Spark, Hive and MinIO.
+
+Through the DAG [dag.poder_compra](workspace/dags/dag_poder_compra.py), the necessary artifacts for executing Spark jobs are uploaded, including the source code files and their dependencies, all stages of the pipeline are executed, resulting in a final table, which will be explored using Metabase.
+
+![Metabase Dashboard](assets/metabase-dashboard.png)
