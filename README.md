@@ -7,14 +7,14 @@ Feel free to study or replicate the content here.
 
 ## Prerequisites (tested)
 - Docker Compose >= 2.24.7
-- Terraform >= 1.17.4
+- OpenTofu >= 1.6.2
 
 ## Available services
 - Hive Metastore (HMS)
 - MinIO
 - Trino
 - Apache Spark
-- Terraform
+- OpenTofu
 - Airflow
 - Metabase
 
@@ -51,9 +51,9 @@ docker compose up -d [--scale trino-worker=<num>] [--scale spark-worker=<num>]
 Create MinIO Buckets (only on first run).
 
 ``` bash
-terraform init
-terraform plan
-terraform apply -auto-approve
+tofu init
+tofu plan
+tofu apply -auto-approve
 ```
 
 Create HMS schemas (only on first run).
