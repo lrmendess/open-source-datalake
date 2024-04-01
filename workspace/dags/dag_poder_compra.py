@@ -48,7 +48,6 @@ def poder_compra():
         raw_task_salario_minimo = PySparkDockerOperator(
             name='raw_tb_salario_minimo',
             application=f'{s3_src_prefix}/salario_minimo/pyspark_raw_salario_minimo.py',
-            options=[('--py-files', s3_pyfiles_zip)],
             environment={
                 'BUCKET_DATALAKE_LANDING': Variable.get('bucket_datalake_landing')
             }
@@ -66,7 +65,6 @@ def poder_compra():
         raw_task_preco_cesta_basica = PySparkDockerOperator(
             name='raw_tb_preco_cesta_basica',
             application=f'{s3_src_prefix}/preco_cesta_basica/pyspark_raw_preco_cesta_basica.py',
-            options=[('--py-files', s3_pyfiles_zip)],
             environment={
                 'BUCKET_DATALAKE_LANDING': Variable.get('bucket_datalake_landing')
             }
@@ -82,8 +80,7 @@ def poder_compra():
 
     task_poder_compra = PySparkDockerOperator(
         name='refined_tb_poder_compra',
-        application=f'{s3_src_prefix}/poder_compra/pyspark_refined_poder_compra.py',
-        options=[('--py-files', s3_pyfiles_zip)]
+        application=f'{s3_src_prefix}/poder_compra/pyspark_refined_poder_compra.py'
     )
 
     upload_artifacts_task >> [salario_minimo_task, preco_cesta_basica_task] >> task_poder_compra
