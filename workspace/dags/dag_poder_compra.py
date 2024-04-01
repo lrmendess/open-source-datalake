@@ -42,7 +42,7 @@ def poder_compra():
         pyfiles_zip_task >> upload_pyfiles_task >> upload_src_task
 
     s3_src_prefix = "{{ti.xcom_pull(task_ids='upload_artifacts.upload_src')}}"
-    s3_pyfiles_zip = "{{ti.xcom_pull(task_ids='upload_artifacts.upload_pyfiles')}}"
+    s3_pyfiles_01 = "{{ti.xcom_pull(task_ids='upload_artifacts.upload_pyfiles')}}"
 
     with TaskGroup('salario_minimo') as salario_minimo_task:
         raw_task_salario_minimo = PySparkDockerOperator(
@@ -56,7 +56,7 @@ def poder_compra():
         trusted_task_salario_minimo = PySparkDockerOperator(
             name='trusted_tb_salario_minimo',
             application=f'{s3_src_prefix}/salario_minimo/pyspark_trusted_salario_minimo.py',
-            options=[('--py-files', s3_pyfiles_zip)]
+            options=[('--py-files', s3_pyfiles_01)]
         )
 
         raw_task_salario_minimo >> trusted_task_salario_minimo
@@ -73,7 +73,7 @@ def poder_compra():
         trusted_task_preco_cesta_basica = PySparkDockerOperator(
             name='trusted_tb_preco_cesta_basica',
             application=f'{s3_src_prefix}/preco_cesta_basica/pyspark_trusted_preco_cesta_basica.py',
-            options=[('--py-files', s3_pyfiles_zip)]
+            options=[('--py-files', s3_pyfiles_01)]
         )
 
         raw_task_preco_cesta_basica >> trusted_task_preco_cesta_basica
