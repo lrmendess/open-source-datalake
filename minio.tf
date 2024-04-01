@@ -52,7 +52,7 @@ resource "minio_s3_object" "upload_cesta_basica_samples" {
   depends_on = [minio_s3_bucket.landing_bucket]
   bucket_name = minio_s3_bucket.landing_bucket.bucket
   object_name = "preco-cesta-basica/${each.value}"
-  content = file("minio/samples/preco-cesta-basica/${each.value}")
+  content = sensitive(file("minio/samples/preco-cesta-basica/${each.value}"))
   content_type = "text/plain"
 }
 
@@ -61,7 +61,7 @@ resource "minio_s3_object" "upload_salario_minimo_samples" {
   depends_on = [minio_s3_bucket.landing_bucket]
   bucket_name = minio_s3_bucket.landing_bucket.bucket
   object_name = "salario-minimo/${each.value}"
-  content = file("minio/samples/salario-minimo/${each.value}")
+  content = sensitive(file("minio/samples/salario-minimo/${each.value}"))
   content_type = "text/plain"
 }
 
