@@ -91,7 +91,7 @@ For more details, see the official [Airflow documentation](https://airflow.apach
 To create dashboards with BI tools, Metabase was arbitrarily chosen, which can be executed with the command below.
 
 ```bash
-docker compose -f docker-compose.metabase up -d
+docker compose -f docker-compose.metabase.yml up -d
 ```
 
 Access the URL [http://localhost:3000](http://localhost:3000) in your browser. Create your user account and use Starbust to connect to the database (Trino).
@@ -145,10 +145,17 @@ cd pyfiles && zip -r pyfiles.zip *
 # Upload artifacts to s3a://artifacts/salario_minimo using minio ui
 
 # Spark job 1
-docker run -t --rm -e BUCKET_DATALAKE_LANDING=datalake-landing --network datalake-network datalake-spark-image spark-submit --name raw_tb_salario_minimo s3a://datalake-artifacts/salario_minimo/pyspark_raw_salario_minimo.py
+docker run -t --rm -e BUCKET_DATALAKE_LANDING=datalake-landing --network datalake-network datalake-spark-image \
+spark-submit \
+--name raw_tb_salario_minimo \
+s3a://datalake-artifacts/salario_minimo/pyspark_raw_salario_minimo.py
 
 # Spark job 2
-docker run -t --rm --network datalake-network datalake-spark-image spark-submit --name trusted_tb_salario_minimo --py-files s3a://datalake-artifacts/salario_minimo/pyfiles.zip s3a://datalake-artifacts/salario_minimo/pyspark_trusted_salario_minimo.py
+docker run -t --rm --network datalake-network datalake-spark-image \
+spark-submit \
+--name trusted_tb_salario_minimo \
+--py-files s3a://datalake-artifacts/salario_minimo/pyfiles.zip \
+s3a://datalake-artifacts/salario_minimo/pyspark_trusted_salario_minimo.py
 
 # Check the status of running jobs at http://localhost:8082
 ```
