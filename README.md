@@ -1,14 +1,15 @@
 # Open Source Data Lake
 ![Actions Result](https://github.com/lrmendess/open-source-datalake/actions/workflows/default-actions.yml/badge.svg)
 
-This project consists of a learning initiative in creating a Big Data cluster using open source tools.
+This project creates a Big Data cluster using open source tools and it was designed for learning purposes.
 
 Feel free to study or replicate the content here.
 
-## Prerequisites (tested)
+## Prerequisites
 - Docker >= 25.0.4
 - Docker Compose >= 2.24.7
 - OpenTofu >= 1.6.2
+- 8GB of RAM or more
 
 ## Available services
 - Airflow
@@ -58,16 +59,19 @@ tofu apply -auto-approve
 ```
 
 Create Data Lake schemas (only on first run).
+
 ``` bash
 docker container exec datalake-trino-coordinator trino --execute "$(cat trino/schemas.sql)"
 ```
+
+> If you receive warnings that Trino is still initializing, wait a few seconds and try again.
 
 Now the cluster is ready!
 
 ### Airflow (optional)
 Airflow was chosen as a tool for job orchestration, for the simple reason that it is open source and the most common on the market.
 
-First you need to run the database migrations and create a user account, to do this just run the command below:
+First you need to run the database migrations and create a user account. Just run the command below:
 
 ``` bash
 docker compose -f docker-compose.airflow.yml up airflow-init
@@ -83,18 +87,18 @@ Once airflow-init is finished, we can actually run Apache Airflow.
 docker compose -f docker-compose.airflow.yml up -d
 ```
 
-Access the URL [http://localhost:8080](http://localhost:8080) in your browser and log in using `airflow` as username and `airflow` as password (basically the default user).
+Access the URL [http://localhost:8080](http://localhost:8080) in your browser and log in using the default authentication (`airflow`:`airflow`).
 
 For more details, see the official [Airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html).
 
 ### Metabase (optional)
-To create dashboards with BI tools, Metabase was arbitrarily chosen, which can be executed with the command below.
+Metabase was arbitrarily chosen to create dashboards with BI tools. It can be executed with the command below:
 
 ```bash
 docker compose -f docker-compose.metabase.yml up -d
 ```
 
-Access the URL [http://localhost:3000](http://localhost:3000) in your browser. Create your user account and use Starbust to connect to the database (Trino).
+Access the URL [http://localhost:3000](http://localhost:3000) in your browser. Create your user account and use Starburst to connect to the database (Trino).
 - **Hostname:** datalake-trino-coordinator
 - **Port:** 8080
 - **Catalog (optional):** hive
@@ -137,7 +141,7 @@ For more details, see the official [Submitting Applications documentation](https
 
 ### Example of use:
 ```bash
-# Build pyfiles.zip
+# Build dependencies
 cd workspace/project
 pip install -r requirements.txt -t pyfiles
 cd pyfiles && zip -r pyfiles.zip *
@@ -176,6 +180,6 @@ trino> select * from trusted.tb_salario_minimo limit 3;
 ## Proof of Concept
 In the [workspace/project](workspace/project) directory, we have a project that serves as a demonstration of how the Cluster and Data Lake works. It consists of a simple data pipeline for ingestion, curation and refinement, demonstrating the interaction between Spark, Hive and MinIO.
 
-Through the DAG [dag.poder_compra](workspace/dags/dag_poder_compra.py), the necessary artifacts for executing Spark jobs are uploaded, including the source code files and their dependencies, all stages of the pipeline are executed, resulting in a final table called `trusted.tb_poder_compra`, which was explored using Metabase..
+Through the DAG [dag.poder_compra](workspace/dags/dag_poder_compra.py), the necessary artifacts for executing Spark jobs are uploaded (including the source code files and their dependencies) and all stages of the pipeline are executed, resulting in a final table called `trusted.tb_poder_compra`, which was explored using Metabase.
 
 ![Metabase Dashboard](assets/metabase-dashboard.png)
