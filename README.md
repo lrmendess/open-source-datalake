@@ -5,10 +5,11 @@ This project creates a Big Data cluster using open source tools and it was desig
 
 Feel free to study or replicate the content here.
 
-## Prerequisites (tested)
+## Prerequisites
 - Docker >= 25.0.4
 - Docker Compose >= 2.24.7
 - OpenTofu >= 1.6.2
+- 8GB of RAM or more
 
 ## Available services
 - Airflow
@@ -58,9 +59,12 @@ tofu apply -auto-approve
 ```
 
 Create Data Lake schemas (only on first run).
+
 ``` bash
 docker container exec datalake-trino-coordinator trino --execute "$(cat trino/schemas.sql)"
 ```
+
+> If you receive warnings that Trino is still initializing, wait a few seconds and try again.
 
 Now the cluster is ready!
 
@@ -94,7 +98,7 @@ Metabase was arbitrarily chosen to create dashboards with BI tools. It can be ex
 docker compose -f docker-compose.metabase.yml up -d
 ```
 
-Access the URL [http://localhost:3000](http://localhost:3000) in your browser. Create your user account and use Starbust to connect to the database (Trino).
+Access the URL [http://localhost:3000](http://localhost:3000) in your browser. Create your user account and use Starburst to connect to the database (Trino).
 - **Hostname:** datalake-trino-coordinator
 - **Port:** 8080
 - **Catalog (optional):** hive
@@ -137,7 +141,7 @@ For more details, see the official [Submitting Applications documentation](https
 
 ### Example of use:
 ```bash
-# Build pyfiles.zip
+# Build dependencies
 cd workspace/project
 pip install -r requirements.txt -t pyfiles
 cd pyfiles && zip -r pyfiles.zip *
