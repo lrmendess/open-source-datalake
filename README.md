@@ -5,13 +5,13 @@ This project creates a Big Data cluster using open source tools and it was desig
 
 Feel free to study or replicate the content here.
 
-## Prerequisites
+## Prerequisites 🛠️
 - Docker >= 25.0.4
 - Docker Compose >= 2.24.7
 - OpenTofu >= 1.6.2
 - 8GB of RAM or more
 
-## Available services
+## Available services ☑️
 - Airflow
 - Apache Spark
 - Hive Metastore (HMS)
@@ -20,12 +20,12 @@ Feel free to study or replicate the content here.
 - OpenTofu
 - Trino
 
-## Project Architecture
+## Project Architecture 🏯
 Below we have an illustration of the project architecture, presenting the available services and their interactions.
 
 ![Architecture](assets/diagram.png)
 
-## Getting started
+## Getting started 🚀
 Below we have a step-by-step guide on how to perform the services available in the project.
 
 ### Environment variables
@@ -48,7 +48,7 @@ Initialize all cluster services (This step may take a while to complete on the f
 docker compose up -d [--scale trino-worker=<num>] [--scale spark-worker=<num>]
 ```
 
-> After the first startup, if you stop the service and want to start it again, you must prefix the variable `IS_RESUME=true` when invoking the `docker-compose up` command again. This will prevent HMS from trying to recreate your database.
+> After the first startup, if you stop the service and want to start it again, you must prefix the variable `IS_RESUME=true` when invoking the `docker-compose up` command again. This will prevent HMS from trying to recreate your database once your volume already exists.
 
 Create MinIO Buckets (only on first run).
 
@@ -118,7 +118,7 @@ For more details, see the official [Metabase documentation](https://www.metabase
 |MinIO|http://localhost:9001|`${MINIO_ROOT_USER}`:`${MINIO_ROOT_PASSWORD}`|
 
 
-## How to submit spark jobs
+## How to submit Spark jobs ✨
 To submit Spark jobs, you can use Airflow itself, which already has a customized operator for this [PySparkDockerOperator](workspace/dags/operators/pyspark_docker_operator.py).
 
 But it is also possible to submit Spark jobs manually, by uploading the artifacts (source code and dependencies) to MinIO and executing the following command.
@@ -177,9 +177,18 @@ trino> select * from trusted.tb_salario_minimo limit 3;
 # (3 rows)
 ```
 
-## Proof of Concept
+## Proof of Concept 🦄
 In the [workspace/project](workspace/project) directory, we have a project that serves as a demonstration of how the Cluster and Data Lake works. It consists of a simple data pipeline for ingestion, curation and refinement, demonstrating the interaction between Spark, Hive and MinIO.
 
-Through the DAG [dag.poder_compra](workspace/dags/dag_poder_compra.py), the necessary artifacts for executing Spark jobs are uploaded (including the source code files and their dependencies) and all stages of the pipeline are executed, resulting in a final table called `trusted.tb_poder_compra`, which was explored using Metabase.
+Through the DAG [dag.poder_compra](workspace/dags/dag_poder_compra.py), the necessary artifacts for executing Spark jobs are uploaded (including the source code files and their dependencies) and all stages of the pipeline are executed, resulting in a final table called `trusted.tb_poder_compra`.
+
+![Airflow DAG](assets/dag-poder-compra.png)
+
+Once table `trusted.tb_poder_compra` is created, we can explore it using Metabase.
 
 ![Metabase Dashboard](assets/metabase-dashboard.png)
+
+## Future works 🔮
+- Improve access control for users and services;
+- Use a password vault instead of a simple .env file;
+- Use Kubernetes to orchestrate containers.
