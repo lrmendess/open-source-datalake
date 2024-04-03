@@ -127,7 +127,7 @@ For more details, see the official [Metabase documentation](https://www.metabase
 |MinIO|http://localhost:9001|`${MINIO_ROOT_USER}`:`${MINIO_ROOT_PASSWORD}`|
 
 
-## How to submit Spark jobs ✨
+## Submit Spark jobs and use the Trino CLI ✨
 To submit Spark jobs, you can use Airflow itself, which already has a customized operator for this [PySparkDockerOperator](workspace/dags/operators/pyspark_docker_operator.py).
 
 But it is also possible to submit Spark jobs manually, by uploading the artifacts (source code and dependencies) to MinIO and executing the following command.
