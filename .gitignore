@@ -13,3 +13,4 @@ workspace/db
 workspace/logs
 
 metabase/metabase.db
+!metabase/metabase.db/metabase.db.mv.db.default

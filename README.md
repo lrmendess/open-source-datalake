@@ -5,13 +5,13 @@ This project creates a Big Data cluster using open source tools and it was desig
 
 Feel free to study or replicate the content here.
 
-## Prerequisites
+## Prerequisites 🛠️
 - Docker >= 25.0.4
 - Docker Compose >= 2.24.7
 - OpenTofu >= 1.6.2
 - 8GB of RAM or more
 
-## Available services
+## Available services ☑️
 - Airflow
 - Apache Spark
 - Hive Metastore (HMS)
@@ -20,12 +20,12 @@ Feel free to study or replicate the content here.
 - OpenTofu
 - Trino
 
-## Project Architecture
+## Project Architecture 🏯
 Below we have an illustration of the project architecture, presenting the available services and their interactions.
 
 ![Architecture](assets/diagram.png)
 
-## Getting started
+## Getting started 🚀
 Below we have a step-by-step guide on how to perform the services available in the project.
 
 ### Environment variables
@@ -48,7 +48,7 @@ Initialize all cluster services (This step may take a while to complete on the f
 docker compose up -d [--scale trino-worker=<num>] [--scale spark-worker=<num>]
 ```
 
-> After the first startup, if you stop the service and want to start it again, you must prefix the variable `IS_RESUME=true` when invoking the `docker-compose up` command again. This will prevent HMS from trying to recreate your database.
+> After the first startup, if you stop the service and want to start it again, you must prefix the variable `IS_RESUME=true` when invoking the `docker-compose up` command again. This will prevent HMS from trying to recreate your database once your volume already exists.
 
 Create MinIO Buckets (only on first run).
 
@@ -87,21 +87,30 @@ Once airflow-init is finished, we can actually run Apache Airflow.
 docker compose -f docker-compose.airflow.yml up -d
 ```
 
-Access the URL [http://localhost:8080](http://localhost:8080) in your browser and log in using the default authentication (`airflow`:`airflow`).
+Access the URL [http://localhost:8080](http://localhost:8080) in your browser and log in using the default authentication `airflow`:`airflow`.
 
 For more details, see the official [Airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html).
 
 ### Metabase (optional)
-Metabase was arbitrarily chosen to create dashboards with BI tools. It can be executed with the command below:
+Metabase was arbitrarily chosen to create dashboards with BI tools.
+
+In the `metabase/metabase.db` directory, copy the file `metabase.db.mv.db.default` to `metabase.db.mv.db`. This way, Metabase will be initialized with the proof-of-concept dashboard already created, but if you want to deploy it cleanly, skip this step.
+
+Run the Metabase container with the command below:
 
 ```bash
 docker compose -f docker-compose.metabase.yml up -d
 ```
 
-Access the URL [http://localhost:3000](http://localhost:3000) in your browser. Create your user account and use Starburst to connect to the database (Trino).
-- **Hostname:** datalake-trino-coordinator
+Access the URL [http://localhost:3000](http://localhost:3000) in your browser and log in using the default authentication `johnny@email.com`:`j0hnny` or create your own account..
+
+If you want to create a new connection with Trino, use the settings below:
+
+- **Database Type**: Starburst
+- **Display Name**: Your choice
+- **Host:** datalake-trino-coordinator
 - **Port:** 8080
-- **Catalog (optional):** hive
+- **Catalog:** hive
 - **Schema (optional):** raw|trusted|refined
 - **Username:** metabase
 - **Password:** no password is required
@@ -111,14 +120,14 @@ For more details, see the official [Metabase documentation](https://www.metabase
 ### Access links to service interfaces
 |Service|URL|Auth|
 |---|---|---|
-|Metabase|http://localhost:3000|Create your own account|
+|Metabase|http://localhost:3000|`johnny@email.com`:`j0hnny`|
 |Airflow|http://localhost:8080|`airflow`:`airflow`|
 |Trino UI|http://localhost:8081|Any username, no password is required|
 |Spark UI|http://localhost:8082|None|
 |MinIO|http://localhost:9001|`${MINIO_ROOT_USER}`:`${MINIO_ROOT_PASSWORD}`|
 
 
-## How to submit spark jobs
+## Submit Spark jobs and use the Trino CLI ✨
 To submit Spark jobs, you can use Airflow itself, which already has a customized operator for this [PySparkDockerOperator](workspace/dags/operators/pyspark_docker_operator.py).
 
 But it is also possible to submit Spark jobs manually, by uploading the artifacts (source code and dependencies) to MinIO and executing the following command.
@@ -177,9 +186,20 @@ trino> select * from trusted.tb_salario_minimo limit 3;
 # (3 rows)
 ```
 
-## Proof of Concept
+## Proof of Concept Project 🦄
 In the [workspace/project](workspace/project) directory, we have a project that serves as a demonstration of how the Cluster and Data Lake works. It consists of a simple data pipeline for ingestion, curation and refinement, demonstrating the interaction between Spark, Hive and MinIO.
 
-Through the DAG [dag.poder_compra](workspace/dags/dag_poder_compra.py), the necessary artifacts for executing Spark jobs are uploaded (including the source code files and their dependencies) and all stages of the pipeline are executed, resulting in a final table called `trusted.tb_poder_compra`, which was explored using Metabase.
+Through the DAG [dag.poder_compra](workspace/dags/dag_poder_compra.py), the necessary artifacts for executing Spark jobs are uploaded (including the source code files and their dependencies) and all stages of the pipeline are executed, resulting in a final table called `trusted.tb_poder_compra`.
+
+![Airflow DAG](assets/dag-poder-compra.png)
+
+Once table `trusted.tb_poder_compra` is created, we can explore it using Metabase.
 
 ![Metabase Dashboard](assets/metabase-dashboard.png)
+
+That's all, folks!
+
+## Future works 🔮
+- Improve access control for users and services;
+- Use a password vault instead of a simple .env file;
+- Use Kubernetes to orchestrate containers.
