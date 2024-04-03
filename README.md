@@ -92,13 +92,17 @@ Access the URL [http://localhost:8080](http://localhost:8080) in your browser an
 For more details, see the official [Airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html).
 
 ### Metabase (optional)
-Metabase was arbitrarily chosen to create dashboards with BI tools. It can be executed with the command below:
+Metabase was arbitrarily chosen to create dashboards with BI tools.
+
+In the `metabase/metabase.db` directory, copy the file `metabase.db.mv.db.default` to `metabase.db.mv.db`. This way, Metabase will be initialized with the proof-of-concept dashboard already created, but if you want to deploy it cleanly, skip this step.
+
+Run the Metabase container with the command below:
 
 ```bash
 docker compose -f docker-compose.metabase.yml up -d
 ```
 
-Access the URL [http://localhost:3000](http://localhost:3000) in your browser and log in using the default authentication `johnny@email.com`:`j0hnny`.
+Access the URL [http://localhost:3000](http://localhost:3000) in your browser and log in using the default authentication `johnny@email.com`:`j0hnny` or create your own account..
 
 If you want to create a new connection with Trino, use the settings below:
 
@@ -182,7 +186,7 @@ trino> select * from trusted.tb_salario_minimo limit 3;
 # (3 rows)
 ```
 
-## Proof of Concept 🦄
+## Proof of Concept Project 🦄
 In the [workspace/project](workspace/project) directory, we have a project that serves as a demonstration of how the Cluster and Data Lake works. It consists of a simple data pipeline for ingestion, curation and refinement, demonstrating the interaction between Spark, Hive and MinIO.
 
 Through the DAG [dag.poder_compra](workspace/dags/dag_poder_compra.py), the necessary artifacts for executing Spark jobs are uploaded (including the source code files and their dependencies) and all stages of the pipeline are executed, resulting in a final table called `trusted.tb_poder_compra`.
