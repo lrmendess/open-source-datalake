@@ -87,7 +87,7 @@ Once airflow-init is finished, we can actually run Apache Airflow.
 docker compose -f docker-compose.airflow.yml up -d
 ```
 
-Access the URL [http://localhost:8080](http://localhost:8080) in your browser and log in using the default authentication (`airflow`:`airflow`).
+Access the URL [http://localhost:8080](http://localhost:8080) in your browser and log in using the default authentication `airflow`:`airflow`.
 
 For more details, see the official [Airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html).
 
@@ -98,10 +98,15 @@ Metabase was arbitrarily chosen to create dashboards with BI tools. It can be ex
 docker compose -f docker-compose.metabase.yml up -d
 ```
 
-Access the URL [http://localhost:3000](http://localhost:3000) in your browser. Create your user account and use Starburst to connect to the database (Trino).
-- **Hostname:** datalake-trino-coordinator
+Access the URL [http://localhost:3000](http://localhost:3000) in your browser and log in using the default authentication `johnny@email.com`:`j0hnny`.
+
+If you want to create a new connection with Trino, use the settings below:
+
+- **Database Type**: Starburst
+- **Display Name**: Your choice
+- **Host:** datalake-trino-coordinator
 - **Port:** 8080
-- **Catalog (optional):** hive
+- **Catalog:** hive
 - **Schema (optional):** raw|trusted|refined
 - **Username:** metabase
 - **Password:** no password is required
@@ -111,7 +116,7 @@ For more details, see the official [Metabase documentation](https://www.metabase
 ### Access links to service interfaces
 |Service|URL|Auth|
 |---|---|---|
-|Metabase|http://localhost:3000|Create your own account|
+|Metabase|http://localhost:3000|`johnny@email.com`:`j0hnny`|
 |Airflow|http://localhost:8080|`airflow`:`airflow`|
 |Trino UI|http://localhost:8081|Any username, no password is required|
 |Spark UI|http://localhost:8082|None|
@@ -187,6 +192,8 @@ Through the DAG [dag.poder_compra](workspace/dags/dag_poder_compra.py), the nece
 Once table `trusted.tb_poder_compra` is created, we can explore it using Metabase.
 
 ![Metabase Dashboard](assets/metabase-dashboard.png)
+
+That's all, folks!
 
 ## Future works 🔮
 - Improve access control for users and services;
